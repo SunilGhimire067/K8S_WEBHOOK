@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinel K8s — Master Documentation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;--bg4:#21262d;--green:#22c55e;--amber:#f59e0b;--red:#f87171;--blue:#58a6ff;--text:#e6edf3;--muted:#8b949e;--border:#30363d;--font:'Segoe UI',system-ui,-apple-system,sans-serif}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── Navigation ── */
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;height:56px;gap:24px}
+.top-bar .logo{font-size:20px;font-weight:700;color:var(--green)}
+.top-bar .nav-btn{padding:8px 18px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:14px;font-weight:500;transition:.2s}
+.top-bar .nav-btn:hover,.top-bar .nav-btn.active{background:var(--green);color:#000;border-color:var(--green)}
+
+/* ── Sections ── */
+.view{display:none;padding:80px 32px 48px}
+.view.active{display:block}
+.container{max-width:1200px;margin:0 auto}
+
+/* ── PRESENTATION SLIDES ── */
+.slide-deck{position:relative}
+.slide{display:none;min-height:calc(100vh - 140px);padding:48px;border-radius:12px;background:var(--bg2);border:1px solid var(--border);margin-bottom:24px;flex-direction:column;justify-content:center}
+.slide.active{display:flex}
+.slide-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:16px 0;position:sticky;bottom:0;background:var(--bg)}
+.slide-nav button{padding:10px 24px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);cursor:pointer;font-size:14px;transition:.2s}
+.slide-nav button:hover{background:var(--green);color:#000;border-color:var(--green)}
+.slide-nav .counter{color:var(--muted);font-size:14px;min-width:80px;text-align:center}
+.slide h1{font-size:42px;font-weight:800;margin-bottom:16px;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.slide h2{font-size:28px;font-weight:700;color:var(--green);margin-bottom:12px;margin-top:24px}
+.slide h3{font-size:20px;font-weight:600;color:var(--blue);margin-bottom:8px;margin-top:16px}
+.slide p,.slide li{font-size:18px;color:var(--text);margin-bottom:8px}
+.slide ul{padding-left:28px}
+.slide .subtitle{font-size:20px;color:var(--muted);margin-bottom:32px}
+
+/* ── Diagram boxes ── */
+.arch-diagram{display:flex;flex-direction:column;gap:16px;align-items:center;margin:24px 0}
+.arch-row{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.arch-box{padding:16px 24px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);text-align:center;min-width:160px}
+.arch-box.green{border-color:var(--green);color:var(--green)}
+.arch-box.blue{border-color:var(--blue);color:var(--blue)}
+.arch-box.amber{border-color:var(--amber);color:var(--amber)}
+.arch-box.red{border-color:var(--red);color:var(--red)}
+.arch-box .label{font-size:14px;font-weight:700}
+.arch-box .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.arch-arrow{font-size:24px;color:var(--muted)}
+
+/* ── Tables ── */
+table{width:100%;border-collapse:collapse;margin:16px 0}
+th,td{padding:10px 14px;text-align:left;border:1px solid var(--border);font-size:14px}
+th{background:var(--bg4);color:var(--green);font-weight:600}
+td{background:var(--bg3)}
+code{background:var(--bg4);padding:2px 6px;border-radius:4px;font-size:13px;font-family:'Fira Code','Cascadia Code',monospace}
+pre{background:#0a0e14;padding:16px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;font-family:'Fira Code','Cascadia Code',monospace;color:var(--green);border:1px solid var(--border);margin:12px 0}
+
+/* ── TECHNICAL DOCS ── */
+.tech-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:32px;margin-bottom:24px}
+.tech-section h2{font-size:24px;font-weight:700;color:var(--green);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.tech-section h3{font-size:18px;font-weight:600;color:var(--blue);margin:20px 0 8px}
+.tech-section h4{font-size:15px;font-weight:600;color:var(--amber);margin:16px 0 6px}
+.tech-section p{margin-bottom:10px;font-size:14px}
+.tech-section ul,.tech-section ol{padding-left:24px;margin-bottom:12px}
+.tech-section li{font-size:14px;margin-bottom:4px}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-amber{background:rgba(245,158,11,.15);color:var(--amber)}
+.badge-red{background:rgba(248,113,113,.15);color:var(--red)}
+.badge-blue{background:rgba(88,166,255,.15);color:var(--blue)}
+
+/* ── TOC ── */
+.toc{columns:2;column-gap:32px}
+.toc a{display:block;padding:4px 0;font-size:14px;color:var(--blue)}
+@media(max-width:768px){.toc{columns:1}.slide h1{font-size:28px}.slide p,.slide li{font-size:15px}.arch-row{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- TOP NAVIGATION BAR                                                  -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="top-bar">
+  <span class="logo">Sentinel K8s</span>
+  <button class="nav-btn active" onclick="switchView('presentation')">Presentation</button>
+  <button class="nav-btn" onclick="switchView('technical')">Technical Docs</button>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗ -->
+<!-- ║  APPROACH 1: PRESENTATION MODE (SLIDE STYLE)                    ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════╝ -->
+<div id="presentation" class="view active">
+<div class="container">
+<div class="slide-deck" id="slideDeck">
+
+<!-- SLIDE 1: Title -->
+<div class="slide active">
+  <h1>Sentinel K8s</h1>
+  <p class="subtitle">Kubernetes Cluster Monitoring Dashboard with AI-Powered Event Analysis</p>
+  <p>A full-stack observability platform combining real-time event tracking, cluster monitoring, and an intelligent AI chat assistant for diagnostics and automated remediation.</p>
+  <div style="margin-top:32px">
+    <table>
+      <tr><th>Stack</th><th>Technology</th><th>Port</th></tr>
+      <tr><td>Event Collection</td><td>webhook_receiver.py + event_watcher.py</td><td>8000</td></tr>
+      <tr><td>Backend API</td><td>FastAPI (Python)</td><td>8001</td></tr>
+      <tr><td>Frontend</td><td>React 19 + TypeScript + Vite</td><td>5173</td></tr>
+      <tr><td>MCP Server</td><td>Python (stdio) for Claude Desktop</td><td>stdio</td></tr>
+      <tr><td>Database</td><td>SQLite (WAL mode)</td><td>&#8212;</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- SLIDE 2: Architecture Overview -->
+<div class="slide">
+  <h1>System Architecture</h1>
+  <div class="arch-diagram">
+    <div class="arch-row">
+      <div class="arch-box blue"><div class="label">Kubernetes Cluster</div><div class="sub">Pods, Nodes, Events</div></div>
+    </div>
+    <div class="arch-arrow">&#9660;</div>
+    <div class="arch-row">
+      <div class="arch-box amber"><div class="label">event_watcher.py</div><div class="sub">kubectl get events --watch</div></div>
+      <div class="arch-arrow">&#9654;</div>
+      <div class="arch-box amber"><div class="label">webhook_receiver.py</div><div class="sub">FastAPI :8000</div></div>
+    </div>
+    <div class="arch-arrow">&#9660;</div>
+    <div class="arch-row">
+      <div class="arch-box green"><div class="label">k8s_events.db</div><div class="sub">SQLite &middot; WAL Mode</div></div>
+    </div>
+    <div class="arch-arrow">&#9660;</div>
+    <div class="arch-row">
+      <div class="arch-box green"><div class="label">Backend API</div><div class="sub">FastAPI :8001</div></div>
+      <div class="arch-box blue"><div class="label">MCP Server</div><div class="sub">Claude Desktop (stdio)</div></div>
+      <div class="arch-box amber"><div class="label">LiteLLM Proxy</div><div class="sub">OpenAI-compatible LLM</div></div>
+    </div>
+    <div class="arch-arrow">&#9660;</div>
+    <div class="arch-row">
+      <div class="arch-box green"><div class="label">React Frontend</div><div class="sub">Vite :5173</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: Frontend (chat_ui) -->
+<div class="slide">
+  <h1>React Frontend (chat_ui)</h1>
+  <p class="subtitle">React 19 + TypeScript + Vite &mdash; Port 5173</p>
+  <h2>Pages (9 Routes)</h2>
+  <table>
+    <tr><th>Route</th><th>Page</th><th>Purpose</th></tr>
+    <tr><td>/login</td><td>LoginPage</td><td>2FA login (password + TOTP)</td></tr>
+    <tr><td>/</td><td>DashboardPage</td><td>Stats, recent events, node overview</td></tr>
+    <tr><td>/events</td><td>EventExplorerPage</td><td>Filterable event table + live mode</td></tr>
+    <tr><td>/nodes</td><td>NodesPage</td><td>Cluster node status table</td></tr>
+    <tr><td>/logs</td><td>LogsPage</td><td>Pod log viewer (namespace &rarr; pod &rarr; logs)</td></tr>
+    <tr><td>/resources</td><td>ResourceAllocationPage</td><td>Pod CPU/memory assigned vs consumed with progress bars</td></tr>
+    <tr><td>/jvm</td><td>JvmDetailsPage</td><td>JVM expected (env vars) vs actual (runtime) comparison</td></tr>
+    <tr><td>/network</td><td>NetworkLatencyPage</td><td>Cross-namespace latency testing, service connectivity, network policies</td></tr>
+    <tr><td>/ai-insights</td><td>AIInsightsPage</td><td>AI chat with skill buttons and tool calls</td></tr>
+  </table>
+  <h2>Key Components</h2>
+  <ul>
+    <li><strong>AppLayout + Sidebar</strong> &mdash; Navigation shell with logout</li>
+    <li><strong>ProtectedRoute</strong> &mdash; Auth guard redirecting to /login</li>
+    <li><strong>MessageBubble</strong> &mdash; Markdown rendering via react-markdown</li>
+    <li><strong>ToolCallDisplay</strong> &mdash; Collapsible tool execution cards</li>
+    <li><strong>SkillBar</strong> &mdash; Quick-action skill buttons</li>
+    <li><strong>SeverityBadge</strong> &mdash; Colored CRITICAL / WARNING / INFO badges</li>
+  </ul>
+</div>
+
+<!-- SLIDE 4: Claude Desktop / MCP Server -->
+<div class="slide">
+  <h1>Claude Desktop &amp; MCP Server</h1>
+  <p class="subtitle">Model Context Protocol Integration</p>
+  <p><code>mcp_server.py</code> exposes 10 Kubernetes analysis tools to Claude Desktop via the Model Context Protocol (stdio transport).</p>
+  <h2>How It Works</h2>
+  <div class="arch-diagram">
+    <div class="arch-row">
+      <div class="arch-box blue"><div class="label">Claude Desktop</div><div class="sub">User asks about K8s</div></div>
+      <div class="arch-arrow">&#9654;</div>
+      <div class="arch-box green"><div class="label">MCP Server</div><div class="sub">mcp_server.py (stdio)</div></div>
+      <div class="arch-arrow">&#9654;</div>
+      <div class="arch-box amber"><div class="label">k8s_events.db + kubectl</div><div class="sub">Read events &amp; cluster state</div></div>
+    </div>
+  </div>
+  <h2>Configuration (claude_desktop_config.json)</h2>
+  <pre>{
+  "mcpServers": {
+    "k8s-event-analyzer": {
+      "command": "/path/to/.venv/bin/python3",
+      "args": ["/path/to/k8s_webhook/mcp_server.py"],
+      "env": { "KUBECONFIG": "~/.kube/config" }
+    }
+  }
+}</pre>
+</div>
+
+<!-- SLIDE 5: API Communication Flow -->
+<div class="slide">
+  <h1>API Communication Flow</h1>
+  <h2>End-to-End Data Flow</h2>
+  <pre>1. EVENT CAPTURE
+   K8s Cluster &rarr; event_watcher.py streams events
+   &rarr; webhook_receiver.py classifies severity
+   &rarr; stores in k8s_events.db
+
+2. USER LOGIN
+   Browser &rarr; POST /api/auth/login &rarr; TOTP verify &rarr; session token in localStorage
+
+3. DASHBOARD VIEW
+   DashboardPage &rarr; parallel fetch: event stats + events + nodes
+
+4. AI ANALYSIS
+   User message &rarr; POST /api/chat &rarr; system prompt + LLM with 10 tools
+   &rarr; tool loop (max 10 rounds) &rarr; markdown response
+
+5. REMEDIATION
+   LLM calls apply_fix(dry_run=True) &rarr; user confirms
+   &rarr; apply_fix(dry_run=False) &rarr; mark_resolved(event_id)</pre>
+</div>
+
+<!-- SLIDE 6: Webhooks & Event System -->
+<div class="slide">
+  <h1>Webhooks &amp; Event Collection</h1>
+  <h2>webhook_receiver.py (Port 8000)</h2>
+  <ul>
+    <li>Receives K8s events via <code>POST /webhook/event</code></li>
+    <li>Classifies severity: <span class="badge badge-red">critical</span> <span class="badge badge-amber">warning</span> <span class="badge badge-green">info</span></li>
+    <li>Stores in SQLite with 16-char hash event_id, timestamps, status</li>
+  </ul>
+  <h2>event_watcher.py (CLI)</h2>
+  <ul>
+    <li>Runs <code>kubectl get events --watch -o json</code></li>
+    <li>Parses streaming JSON and POSTs each event to port 8000</li>
+    <li>Supports <code>--namespace</code> filtering</li>
+  </ul>
+  <h2>Severity Classification</h2>
+  <table>
+    <tr><th>Severity</th><th>Reasons</th></tr>
+    <tr><td><span class="badge badge-red">critical</span></td><td>CrashLoopBackOff, OOMKilled, FailedScheduling, ImagePullBackOff, NodeNotReady, FailedCreate</td></tr>
+    <tr><td><span class="badge badge-amber">warning</span></td><td>BackOff, Unhealthy, FailedMount, Evicted, DeadlineExceeded</td></tr>
+    <tr><td><span class="badge badge-green">info</span></td><td>Everything else (Normal events)</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE 7: AI Skills System -->
+<div class="slide">
+  <h1>Skills System</h1>
+  <p class="subtitle">Predefined AI Workflows via skills.yaml</p>
+  <table>
+    <tr><th>Skill</th><th>Purpose</th></tr>
+    <tr><td>Cluster Health Check</td><td>Full assessment &mdash; event summary, node status, critical events</td></tr>
+    <tr><td>Pod Status Overview</td><td>All pods across namespaces, identify unhealthy ones</td></tr>
+    <tr><td>Recent Incidents</td><td>Top 3 critical/warning events with analysis</td></tr>
+    <tr><td>Resource Usage</td><td>Node and pod utilization via kubectl top</td></tr>
+    <tr><td>Namespace Audit</td><td>Audit all resources in a namespace</td></tr>
+    <tr><td>Resource Trace</td><td>Trace high resource usage on pods &mdash; root cause analysis</td></tr>
+    <tr><td>JVM Analysis</td><td>Analyze JVM configuration for Java pods &mdash; expected vs actual</td></tr>
+    <tr><td>Network Check</td><td>Check service connectivity, latency, and network policies</td></tr>
+  </table>
+  <h2>How Skills Work</h2>
+  <ol>
+    <li>User clicks skill button in UI</li>
+    <li>Frontend sends: <code>[Skill Label] prompt text</code></li>
+    <li>Backend <code>_expand_skill()</code> replaces with full prompt from skills.yaml</li>
+    <li>LLM executes the prompt, calling tools as needed</li>
+  </ol>
+  <p>Skills are <strong>hot-reloadable</strong> via <code>POST /api/reload</code> without restarting the backend.</p>
+</div>
+
+<!-- SLIDE 8: Advanced Observability Features -->
+<div class="slide">
+  <h1>Advanced Observability</h1>
+  <p class="subtitle">Resource Allocation &bull; JVM Details &bull; Network Latency</p>
+  <h2>Resource Allocation (/resources)</h2>
+  <ul>
+    <li>Live CPU/memory usage vs requests/limits per pod (via <code>kubectl top</code> + pod specs)</li>
+    <li>Progress bars with color coding: <span class="badge badge-green">green &lt;70%</span> <span class="badge badge-amber">amber 70-90%</span> <span class="badge badge-red">red &gt;90%</span></li>
+    <li><strong>Resource Trace</strong> &mdash; AI-powered root cause analysis for high-usage pods (LLM analyzes describe, logs, events, metrics)</li>
+  </ul>
+  <h2>JVM Details (/jvm)</h2>
+  <ul>
+    <li>Scans pods for JVM env vars (<code>JAVA_OPTS</code>, <code>JAVA_TOOL_OPTIONS</code>, <code>JVM_OPTS</code>, <code>_JAVA_OPTIONS</code>)</li>
+    <li>Compares <strong>expected</strong> flags (from env) vs <strong>actual</strong> runtime flags (via <code>jcmd 1 VM.flags</code>)</li>
+    <li>Highlights mismatches with expandable detail rows</li>
+  </ul>
+  <h2>Network Latency (/network)</h2>
+  <ul>
+    <li>Service map: name, type, ClusterIP, ports, endpoint counts</li>
+    <li><strong>Cross-namespace latency</strong> &mdash; separate Source (namespace + pod) and Target (namespace) selectors</li>
+    <li><strong>Latency testing</strong> via <code>kubectl exec -- curl -w '%{time_total}'</code> with self-service skip</li>
+    <li><strong>Check button</strong> on each result &mdash; shows full test process, command, curl flags, and cross-namespace badge</li>
+    <li>Network policies viewer and NetworkNotReady event detection</li>
+  </ul>
+</div>
+
+<!-- SLIDE 9: Storage / Persistence -->
+<div class="slide">
+  <h1>Storage &amp; Persistence</h1>
+  <h2>SQLite Database: k8s_events.db</h2>
+  <ul>
+    <li>Located at project root, shared by all components</li>
+    <li><strong>WAL mode</strong> enabled for concurrent reads/writes</li>
+    <li>3 indexes: status, severity, created_at</li>
+  </ul>
+  <h2>Schema</h2>
+  <pre>k8s_events (
+  id, event_id, event_type, kind, name, namespace,
+  reason, message, severity, raw_payload,
+  status, analysis, created_at, updated_at
+)</pre>
+  <h2>Other Persistent Data</h2>
+  <table>
+    <tr><th>File</th><th>Purpose</th><th>Lifetime</th></tr>
+    <tr><td>.totp_secret</td><td>TOTP key for 2FA</td><td>Permanent</td></tr>
+    <tr><td>localStorage (browser)</td><td>Session token</td><td>Until logout</td></tr>
+    <tr><td>_tokens set (memory)</td><td>Active sessions</td><td>Until restart</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE 9: Deployment Flow -->
+<div class="slide">
+  <h1>Deployment Flow</h1>
+  <h2>Docker</h2>
+  <pre>docker build -t k8s-webhook-receiver:latest .
+docker run -d -p 8000:8000 k8s-webhook-receiver:latest</pre>
+  <h2>Kubernetes (k8s-manifests.yaml)</h2>
+  <pre>kubectl apply -f k8s-manifests.yaml</pre>
+  <ul>
+    <li><strong>Namespace:</strong> k8s-webhook</li>
+    <li><strong>Deployments:</strong> webhook-receiver (1 replica) + event-exporter</li>
+    <li><strong>Service:</strong> port 80 &rarr; 8000</li>
+    <li><strong>RBAC:</strong> ClusterRole for reading events</li>
+    <li><strong>Health Checks:</strong> liveness &amp; readiness probes on /health</li>
+    <li><strong>Storage:</strong> emptyDir volume at /app/data</li>
+  </ul>
+  <h2>Local Development</h2>
+  <pre># Terminal 1: Backend
+cd chat_ui &amp;&amp; python -m uvicorn backend.main:app --port 8001 --reload
+
+# Terminal 2: Frontend
+cd chat_ui/frontend &amp;&amp; npm run dev
+
+# Terminal 3 (optional): Event collection
+python -m uvicorn webhook_receiver:app --port 8000
+python event_watcher.py</pre>
+</div>
+
+<!-- SLIDE 10: Environment Configuration -->
+<div class="slide">
+  <h1>Environment Configuration</h1>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Used By</th><th>Purpose</th></tr>
+    <tr><td>LITELLM_BASE_URL</td><td>http://localhost:4000/v1</td><td>Backend</td><td>LLM API endpoint</td></tr>
+    <tr><td>LITELLM_MODEL</td><td>gpt-4o</td><td>Backend</td><td>Model identifier</td></tr>
+    <tr><td>LITELLM_API_KEY</td><td>sk-placeholder</td><td>Backend</td><td>API key for LLM</td></tr>
+    <tr><td>AUTH_USERNAME</td><td>admin</td><td>Backend</td><td>Login username</td></tr>
+    <tr><td>AUTH_PASSWORD</td><td>admin</td><td>Backend</td><td>Login password</td></tr>
+    <tr><td>VITE_API_BASE</td><td>auto-detected</td><td>Frontend</td><td>Backend URL override</td></tr>
+    <tr><td>KUBECONFIG</td><td>~/.kube/config</td><td>MCP Server</td><td>K8s config path</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE 11: Migration Readiness -->
+<div class="slide">
+  <h1>Migration Readiness</h1>
+  <h2>What Needs Migration</h2>
+  <table>
+    <tr><th>Component</th><th>Migration Approach</th></tr>
+    <tr><td>k8s_events.db</td><td>Copy SQLite file or export/import data</td></tr>
+    <tr><td>.totp_secret</td><td>Copy to new backend path (or reset 2FA)</td></tr>
+    <tr><td>Environment vars</td><td>Replicate in .env or K8s ConfigMap/Secret</td></tr>
+    <tr><td>Backend code</td><td>pip install -r requirements.txt</td></tr>
+    <tr><td>Frontend code</td><td>npm install &amp;&amp; npm run build</td></tr>
+    <tr><td>Docker image</td><td>docker build + push to registry</td></tr>
+    <tr><td>K8s manifests</td><td>Update image registry URL, kubectl apply</td></tr>
+    <tr><td>Claude Desktop</td><td>Update paths in claude_desktop_config.json</td></tr>
+  </table>
+  <h2>Prerequisites</h2>
+  <ul>
+    <li>Python 3.11+ &bull; Node.js 18+ &bull; kubectl with cluster access</li>
+    <li>LiteLLM proxy or any OpenAI-compatible endpoint</li>
+  </ul>
+</div>
+
+<!-- SLIDE 12: Security Considerations -->
+<div class="slide">
+  <h1>Security Considerations</h1>
+  <h2>Authentication</h2>
+  <ul>
+    <li>Two-factor authentication: password + TOTP (RFC 6238)</li>
+    <li>Session tokens: 64-char hex, stored in-memory (cleared on restart)</li>
+    <li>All protected endpoints require <code>Authorization: Bearer &lt;token&gt;</code></li>
+  </ul>
+  <h2>Tool Safety</h2>
+  <ul>
+    <li><code>get_cluster_info</code>: Read-only kubectl commands only (get, describe, logs, top)</li>
+    <li><code>apply_fix</code>: Defaults to <code>--dry-run=client</code>, blocks destructive commands</li>
+    <li>Tool results truncated to 8,000 chars to prevent context overflow</li>
+    <li>Max 10 tool rounds per chat session</li>
+  </ul>
+  <h2>Network</h2>
+  <ul>
+    <li>CORS enabled (configurable origins)</li>
+    <li>SQLite WAL mode for safe concurrent access</li>
+    <li>No secrets in code &mdash; all via environment variables</li>
+  </ul>
+</div>
+
+<!-- SLIDE 13: Dependencies -->
+<div class="slide">
+  <h1>Dependencies</h1>
+  <h2>Backend (Python)</h2>
+  <table>
+    <tr><th>Package</th><th>Purpose</th></tr>
+    <tr><td>fastapi &ge; 0.110</td><td>Web framework</td></tr>
+    <tr><td>uvicorn[standard] &ge; 0.29</td><td>ASGI server</td></tr>
+    <tr><td>openai &ge; 1.12</td><td>LLM client (LiteLLM-compatible)</td></tr>
+    <tr><td>pydantic &ge; 2.0</td><td>Data validation</td></tr>
+    <tr><td>pyyaml &ge; 6.0</td><td>Skills config parsing</td></tr>
+    <tr><td>pyotp &ge; 2.9</td><td>TOTP 2FA code generation</td></tr>
+    <tr><td>qrcode[pil] &ge; 7.4</td><td>QR code for authenticator setup</td></tr>
+    <tr><td>mcp[cli] &ge; 1.26</td><td>MCP server framework</td></tr>
+    <tr><td>requests &ge; 2.31</td><td>HTTP client (event forwarding)</td></tr>
+  </table>
+  <h2>Frontend (Node.js)</h2>
+  <table>
+    <tr><th>Package</th><th>Purpose</th></tr>
+    <tr><td>react 19 + react-dom</td><td>UI framework</td></tr>
+    <tr><td>react-router-dom 7</td><td>Client-side routing</td></tr>
+    <tr><td>react-markdown 10</td><td>Markdown rendering in chat</td></tr>
+    <tr><td>remark-gfm 4</td><td>GitHub-flavored markdown</td></tr>
+    <tr><td>vite 7</td><td>Build tool &amp; dev server</td></tr>
+    <tr><td>typescript 5.9</td><td>Type safety</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE 14: Build & Run -->
+<div class="slide">
+  <h1>Build &amp; Run Process</h1>
+  <h2>Quick Start</h2>
+  <pre># 1. Install dependencies
+cd chat_ui/backend &amp;&amp; pip install -r requirements.txt
+cd chat_ui/frontend &amp;&amp; npm install
+
+# 2. Set environment variables
+export LITELLM_BASE_URL='https://your-server/v1'
+export LITELLM_MODEL='openai/gpt-4o'
+export LITELLM_API_KEY='sk-your-key'
+
+# 3. Start backend
+cd chat_ui &amp;&amp; python -m uvicorn backend.main:app --port 8001 --reload
+
+# 4. Start frontend
+cd chat_ui/frontend &amp;&amp; npm run dev
+
+# 5. Open http://localhost:5173 and login (admin/admin)</pre>
+  <h2>Production Build</h2>
+  <pre># Build frontend for production
+cd chat_ui/frontend &amp;&amp; npm run build
+# Output in chat_ui/frontend/dist/
+
+# Docker build
+docker build -t k8s-webhook-receiver:latest .
+
+# Kubernetes deploy
+kubectl apply -f k8s-manifests.yaml</pre>
+</div>
+
+</div><!-- end slide-deck -->
+
+<!-- Slide Navigation -->
+<div class="slide-nav">
+  <button onclick="changeSlide(-1)">&#9664; Previous</button>
+  <span class="counter" id="slideCounter">1 / 14</span>
+  <button onclick="changeSlide(1)">Next &#9654;</button>
+</div>
+</div><!-- container -->
+</div><!-- presentation view -->
+
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗ -->
+<!-- ║  APPROACH 2: DETAILED TECHNICAL DOCUMENTATION                   ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════╝ -->
+<div id="technical" class="view">
+<div class="container">
+
+<div class="tech-section">
+  <h2>Table of Contents</h2>
+  <div class="toc">
+    <a href="#t-overview">1. Project Overview</a>
+    <a href="#t-architecture">2. Full System Architecture</a>
+    <a href="#t-data-flow">3. Data Flow</a>
+    <a href="#t-folder">4. Folder Structure</a>
+    <a href="#t-config">5. Configuration Files</a>
+    <a href="#t-react">6. React Frontend (chat_ui)</a>
+    <a href="#t-backend">7. Backend API (FastAPI)</a>
+    <a href="#t-mcp">8. MCP Server</a>
+    <a href="#t-claude">9. Claude Desktop Integration</a>
+    <a href="#t-webhook">10. Webhook Setup</a>
+    <a href="#t-skills">11. Skill System</a>
+    <a href="#t-state">12. State Management</a>
+    <a href="#t-api">13. API Layers</a>
+    <a href="#t-auth">14. Authentication Mechanism</a>
+    <a href="#t-deploy">15. Deployment Configuration</a>
+    <a href="#t-deps">16. Runtime Dependencies</a>
+    <a href="#t-versions">17. Version Requirements</a>
+    <a href="#t-db">18. Database Schema</a>
+    <a href="#t-tools">19. AI Tool System (10 Tools)</a>
+    <a href="#t-security">20. Security Considerations</a>
+    <a href="#t-env">21. Environment Variables</a>
+    <a href="#t-migration">22. Migration Considerations</a>
+    <a href="#t-troubleshoot">23. Troubleshooting</a>
+  </div>
+</div>
+
+<!-- 1. Project Overview -->
+<div class="tech-section" id="t-overview">
+  <h2>1. Project Overview</h2>
+  <p><strong>Sentinel K8s</strong> is a full-stack Kubernetes cluster monitoring dashboard with AI-powered event analysis. It combines real-time event tracking, cluster observability, and an intelligent chat assistant that can diagnose issues, suggest fixes, and execute remediation commands.</p>
+  <h3>Core Capabilities</h3>
+  <ul>
+    <li><strong>Real-time Event Monitoring</strong> &mdash; Captures and classifies Kubernetes events (critical/warning/info) with live streaming</li>
+    <li><strong>Cluster Observability</strong> &mdash; Node status, pod management, log viewing, namespace exploration</li>
+    <li><strong>AI-Powered Diagnostics</strong> &mdash; Multi-turn LLM chat with 10 specialized tools for cluster analysis</li>
+    <li><strong>Resource Allocation</strong> &mdash; Live CPU/memory usage vs requests/limits with progress bars and AI-powered resource trace</li>
+    <li><strong>JVM Configuration Audit</strong> &mdash; Compare expected (env vars) vs actual (runtime) JVM flags for Java pods</li>
+    <li><strong>Network Observability</strong> &mdash; Cross-namespace latency testing (source pod &rarr; target services), network policies, endpoint health</li>
+    <li><strong>Automated Remediation</strong> &mdash; AI can suggest and execute fixes with dry-run safety</li>
+    <li><strong>Two-Factor Authentication</strong> &mdash; TOTP-based 2FA compatible with Google Authenticator</li>
+    <li><strong>Claude Desktop Integration</strong> &mdash; Same 10 tools available via MCP protocol</li>
+  </ul>
+  <h3>Theme</h3>
+  <p>The application uses the <strong>Sentinel Dark</strong> theme with dark backgrounds and green accent colors:</p>
+  <table>
+    <tr><th>Token</th><th>Hex</th><th>Usage</th></tr>
+    <tr><td>bgPrimary</td><td>#0D1117</td><td>Page background</td></tr>
+    <tr><td>bgSecondary</td><td>#161B22</td><td>Sidebar</td></tr>
+    <tr><td>bgCard</td><td>#1C2128</td><td>Cards</td></tr>
+    <tr><td>bgElevated</td><td>#21262D</td><td>Elevated panels</td></tr>
+    <tr><td>accentGreen</td><td>#22C55E</td><td>Primary accent</td></tr>
+    <tr><td>accentAmber</td><td>#F59E0B</td><td>Warning</td></tr>
+    <tr><td>accentRed</td><td>#F87171</td><td>Critical</td></tr>
+    <tr><td>accentBlue</td><td>#58A6FF</td><td>Info</td></tr>
+    <tr><td>text</td><td>#E6EDF3</td><td>Primary text</td></tr>
+    <tr><td>textMuted</td><td>#8B949E</td><td>Secondary text</td></tr>
+    <tr><td>border</td><td>#30363D</td><td>Borders</td></tr>
+  </table>
+</div>
+
+<!-- 2. Full System Architecture -->
+<div class="tech-section" id="t-architecture">
+  <h2>2. Full System Architecture</h2>
+  <h3>Logical Architecture</h3>
+  <p>The system consists of four logical layers:</p>
+  <table>
+    <tr><th>Layer</th><th>Components</th><th>Purpose</th></tr>
+    <tr><td><strong>Data Collection</strong></td><td>event_watcher.py, webhook_receiver.py</td><td>Capture K8s events, classify severity, persist to SQLite</td></tr>
+    <tr><td><strong>Persistence</strong></td><td>k8s_events.db (SQLite WAL)</td><td>Shared event store accessed by all components concurrently</td></tr>
+    <tr><td><strong>Application</strong></td><td>Backend API, MCP Server, LiteLLM Proxy</td><td>REST API, auth, chat orchestration, tool execution, Claude Desktop</td></tr>
+    <tr><td><strong>Presentation</strong></td><td>React Frontend</td><td>Dashboard, event explorer, AI chat interface</td></tr>
+  </table>
+  <h3>Physical Architecture</h3>
+  <table>
+    <tr><th>Service</th><th>Process</th><th>Port</th><th>Protocol</th></tr>
+    <tr><td>Webhook Receiver</td><td>uvicorn (FastAPI)</td><td>8000</td><td>HTTP</td></tr>
+    <tr><td>Event Watcher</td><td>Python CLI</td><td>&mdash;</td><td>subprocess (kubectl)</td></tr>
+    <tr><td>Backend API</td><td>uvicorn (FastAPI)</td><td>8001</td><td>HTTP + SSE</td></tr>
+    <tr><td>MCP Server</td><td>Python</td><td>&mdash;</td><td>stdio (MCP protocol)</td></tr>
+    <tr><td>Frontend Dev</td><td>Vite</td><td>5173</td><td>HTTP</td></tr>
+    <tr><td>LiteLLM Proxy</td><td>External</td><td>Configurable</td><td>HTTPS (OpenAI-compatible)</td></tr>
+  </table>
+  <h3>Communication Layers</h3>
+  <ul>
+    <li><strong>Event Watcher &rarr; Webhook Receiver:</strong> HTTP POST /webhook/event (JSON payload)</li>
+    <li><strong>Webhook Receiver &rarr; SQLite:</strong> Direct file I/O (WAL mode for concurrency)</li>
+    <li><strong>Backend API &rarr; SQLite:</strong> Direct file I/O (read events, update status)</li>
+    <li><strong>Backend API &rarr; kubectl:</strong> subprocess execution with JSON output parsing</li>
+    <li><strong>Backend API &rarr; LiteLLM:</strong> HTTPS REST (OpenAI-compatible chat/completions)</li>
+    <li><strong>Frontend &rarr; Backend API:</strong> HTTP REST + SSE (Server-Sent Events for streaming)</li>
+    <li><strong>MCP Server &rarr; SQLite:</strong> Direct file I/O (same DB as webhook receiver)</li>
+    <li><strong>Claude Desktop &rarr; MCP Server:</strong> stdio transport (MCP protocol)</li>
+  </ul>
+  <h3>Architecture Diagram</h3>
+  <pre>
+&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+&#9474;                    Kubernetes Cluster (Remote)                    &#9474;
+&#9474;   Pods, Nodes, Deployments, Events                              &#9474;
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+                       &#9474;
+                       &#9660; kubectl get events --watch
+          &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+          &#9474;   event_watcher.py       &#9474;
+          &#9474;   (Stream Forwarder)     &#9474;
+          &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+                       &#9474; POST /webhook/event
+                       &#9660;
+     &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+     &#9474;   webhook_receiver.py (FastAPI :8000)  &#9474;
+     &#9474;   Receives + classifies + stores        &#9474;
+     &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+                    &#9474; writes
+                    &#9660;
+     &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+     &#9474;  k8s_events.db  (SQLite)  &#9474; Shared database
+     &#9474;  WAL mode enabled         &#9474;
+     &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+            &#9474;          &#9474;
+      reads &#9474;          &#9474; reads
+            &#9660;          &#9660;
+  &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;  &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+  &#9474; mcp_server.py  &#9474;  &#9474; Backend API (FastAPI :8001) &#9474;
+  &#9474; (Claude Desktop)&#9474;  &#9474; auth, events, cluster, chat &#9474;
+  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+                                 &#9474; REST API + SSE
+                                 &#9660;
+                    &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+                    &#9474; React Frontend (Vite :5173) &#9474;
+                    &#9474; Dashboard, Events, AI Chat  &#9474;
+                    &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+  </pre>
+  <h3>Integration Flow: chat_ui &harr; Claude Desktop via MCP</h3>
+  <p>Both the web dashboard and Claude Desktop share the same 10 analysis tools and the same database. The difference is the transport:</p>
+  <ul>
+    <li><strong>Web Dashboard:</strong> Frontend &rarr; POST /api/chat &rarr; chat_handler.py &rarr; tool_executor.py &rarr; mcp_server.py functions (direct import)</li>
+    <li><strong>Claude Desktop:</strong> Claude &rarr; MCP protocol (stdio) &rarr; mcp_server.py &rarr; same functions</li>
+  </ul>
+  <p>The <code>tool_executor.py</code> in the backend adds the parent directory to <code>sys.path</code> and directly imports the tool functions from <code>mcp_server.py</code>, ensuring both paths execute identical logic.</p>
+</div>
+
+<!-- 3. Data Flow -->
+<div class="tech-section" id="t-data-flow">
+  <h2>3. Data Flow</h2>
+  <h3>Event Collection Pipeline</h3>
+  <ol>
+    <li><strong>K8s Cluster</strong> emits events (pod created, node unhealthy, etc.)</li>
+    <li><strong>event_watcher.py</strong> runs <code>kubectl get events --watch -o json</code>, parses the streaming JSON output</li>
+    <li>Each event is sent via <strong>HTTP POST</strong> to <code>webhook_receiver.py</code> at port 8000</li>
+    <li><strong>webhook_receiver.py</strong> extracts fields (kind, name, namespace, reason, message), classifies severity, generates a 16-char hash event_id, and inserts into SQLite</li>
+  </ol>
+  <h3>User Authentication Flow</h3>
+  <ol>
+    <li>User submits username + password &rarr; <code>POST /api/auth/login</code></li>
+    <li>Backend validates credentials, generates a temp_token (64-char hex)</li>
+    <li>First login: returns QR code (base64 PNG) for Google Authenticator setup</li>
+    <li>User submits 6-digit TOTP code &rarr; <code>POST /api/auth/verify-totp</code></li>
+    <li>Backend validates TOTP code, issues session token stored in <code>_tokens</code> set</li>
+    <li>Frontend stores token in <code>localStorage["auth_token"]</code></li>
+    <li>All subsequent API calls include <code>Authorization: Bearer &lt;token&gt;</code></li>
+  </ol>
+  <h3>AI Chat Flow</h3>
+  <ol>
+    <li>User types a message or clicks a skill button on AIInsightsPage</li>
+    <li>Frontend sends message history via <code>POST /api/chat</code></li>
+    <li><code>chat_handler.py</code> detects skill prefix <code>[Label]</code> and expands to full prompt</li>
+    <li>System prompt from <code>system_prompt.md</code> is prepended</li>
+    <li>Messages sent to LLM via OpenAI-compatible API (through LiteLLM proxy)</li>
+    <li>LLM responds with optional tool_calls (e.g., <code>list_events</code>, <code>analyze_event</code>)</li>
+    <li><code>tool_executor.py</code> dispatches each tool call to the corresponding function in <code>mcp_server.py</code></li>
+    <li>Tool results are appended to the conversation and sent back to the LLM</li>
+    <li>Loop continues (max 10 rounds) until LLM responds without tool calls</li>
+    <li>All new messages (assistant + tool) are returned to the frontend</li>
+    <li>Frontend renders messages with markdown and collapsible tool call cards</li>
+  </ol>
+</div>
+
+<!-- 4. Folder Structure -->
+<div class="tech-section" id="t-folder">
+  <h2>4. Folder Structure</h2>
+  <pre>
+k8s_webhook/
+&#9500;&#9472;&#9472; About.html                     # This documentation file
+&#9500;&#9472;&#9472; Dockerfile                      # Docker image for webhook receiver
+&#9500;&#9472;&#9472; claude_desktop_config.json       # Claude Desktop MCP config
+&#9500;&#9472;&#9472; event_watcher.py                 # K8s event stream forwarder (CLI)
+&#9500;&#9472;&#9472; k8s-manifests.yaml               # Kubernetes deployment specs
+&#9500;&#9472;&#9472; k8s_events.db                    # SQLite database (WAL mode)
+&#9500;&#9472;&#9472; mcp_server.py                    # MCP server for Claude Desktop (10 tools)
+&#9500;&#9472;&#9472; requirements.txt                 # Root Python dependencies
+&#9500;&#9472;&#9472; test_webhook.py                  # Webhook receiver tests
+&#9500;&#9472;&#9472; webhook_receiver.py              # Event receiver (FastAPI :8000)
+&#9474;
+&#9500;&#9472;&#9472; chat_ui/
+&#9474;   &#9500;&#9472;&#9472; __init__.py                  # Python package marker
+&#9474;   &#9500;&#9472;&#9472; .env.example                 # Environment template
+&#9474;   &#9474;
+&#9474;   &#9500;&#9472;&#9472; backend/
+&#9474;   &#9474;   &#9500;&#9472;&#9472; __init__.py              # Package marker
+&#9474;   &#9474;   &#9500;&#9472;&#9472; main.py                  # FastAPI app, CORS, route registration
+&#9474;   &#9474;   &#9500;&#9472;&#9472; auth.py                  # 2FA login (TOTP), Bearer validation
+&#9474;   &#9474;   &#9500;&#9472;&#9472; config.py                # LiteLLM env config loader
+&#9474;   &#9474;   &#9500;&#9472;&#9472; models.py                # Pydantic schemas
+&#9474;   &#9474;   &#9500;&#9472;&#9472; llm_client.py            # OpenAI SDK client (LiteLLM)
+&#9474;   &#9474;   &#9500;&#9472;&#9472; chat_handler.py          # Multi-turn LLM chat loop
+&#9474;   &#9474;   &#9500;&#9472;&#9472; tool_registry.py         # Tool JSON schemas (10 tools)
+&#9474;   &#9474;   &#9500;&#9472;&#9472; tool_executor.py         # Dispatches tool calls
+&#9474;   &#9474;   &#9500;&#9472;&#9472; events_api.py            # Event CRUD + SSE stream
+&#9474;   &#9474;   &#9500;&#9472;&#9472; cluster_api.py           # kubectl wrapper endpoints
+&#9474;   &#9474;   &#9500;&#9472;&#9472; system_prompt.md         # LLM instructions (hot-reloadable)
+&#9474;   &#9474;   &#9500;&#9472;&#9472; skills.yaml              # 8 predefined prompts (hot-reloadable)
+&#9474;   &#9474;   &#9500;&#9472;&#9472; requirements.txt         # Backend dependencies
+&#9474;   &#9474;   &#9492;&#9472;&#9472; .totp_secret             # TOTP key (auto-generated)
+&#9474;   &#9474;
+&#9474;   &#9492;&#9472;&#9472; frontend/
+&#9474;       &#9500;&#9472;&#9472; index.html               # Entry HTML
+&#9474;       &#9500;&#9472;&#9472; package.json             # npm deps &amp; scripts
+&#9474;       &#9500;&#9472;&#9472; vite.config.ts           # Vite build config
+&#9474;       &#9500;&#9472;&#9472; tsconfig.json            # TypeScript root
+&#9474;       &#9500;&#9472;&#9472; tsconfig.app.json        # App TS config
+&#9474;       &#9500;&#9472;&#9472; tsconfig.node.json       # Node TS config
+&#9474;       &#9500;&#9472;&#9472; eslint.config.js         # ESLint config
+&#9474;       &#9492;&#9472;&#9472; src/
+&#9474;           &#9500;&#9472;&#9472; main.tsx                 # React entry
+&#9474;           &#9500;&#9472;&#9472; App.tsx                  # Router + providers
+&#9474;           &#9500;&#9472;&#9472; api/
+&#9474;           &#9474;   &#9500;&#9472;&#9472; authApi.ts           # Auth endpoints
+&#9474;           &#9474;   &#9500;&#9472;&#9472; chatApi.ts           # Chat + skills
+&#9474;           &#9474;   &#9500;&#9472;&#9472; eventsApi.ts         # Events + stats + SSE
+&#9474;           &#9474;   &#9492;&#9472;&#9472; clusterApi.ts        # Cluster operations
+&#9474;           &#9500;&#9472;&#9472; context/
+&#9474;           &#9474;   &#9500;&#9472;&#9472; AuthContext.tsx       # Auth state provider
+&#9474;           &#9474;   &#9492;&#9472;&#9472; ChatContext.tsx       # Chat state provider
+&#9474;           &#9500;&#9472;&#9472; types/
+&#9474;           &#9474;   &#9500;&#9472;&#9472; chat.ts              # ChatMessage, ToolCall, Skill
+&#9474;           &#9474;   &#9492;&#9472;&#9472; events.ts            # K8sEvent, EventStats
+&#9474;           &#9500;&#9472;&#9472; components/
+&#9474;           &#9474;   &#9500;&#9472;&#9472; layout/
+&#9474;           &#9474;   &#9474;   &#9500;&#9472;&#9472; AppLayout.tsx    # Sidebar + Outlet
+&#9474;           &#9474;   &#9474;   &#9500;&#9472;&#9472; Sidebar.tsx      # Nav links + logout
+&#9474;           &#9474;   &#9474;   &#9492;&#9472;&#9472; ProtectedRoute.tsx # Auth guard
+&#9474;           &#9474;   &#9500;&#9472;&#9472; events/
+&#9474;           &#9474;   &#9474;   &#9492;&#9472;&#9472; SeverityBadge.tsx # Colored badge
+&#9474;           &#9474;   &#9500;&#9472;&#9472; ChatInput.tsx        # Textarea + send
+&#9474;           &#9474;   &#9500;&#9472;&#9472; MessageList.tsx      # Message feed
+&#9474;           &#9474;   &#9500;&#9472;&#9472; MessageBubble.tsx    # Markdown bubble
+&#9474;           &#9474;   &#9500;&#9472;&#9472; ToolCallDisplay.tsx  # Tool call card
+&#9474;           &#9474;   &#9500;&#9472;&#9472; SkillBar.tsx         # Skill buttons
+&#9474;           &#9474;   &#9492;&#9472;&#9472; LoadingIndicator.tsx # Thinking animation
+&#9474;           &#9500;&#9472;&#9472; pages/
+&#9474;           &#9474;   &#9500;&#9472;&#9472; LoginPage.tsx        # 2FA login
+&#9474;           &#9474;   &#9500;&#9472;&#9472; DashboardPage.tsx    # Stats + events
+&#9474;           &#9474;   &#9500;&#9472;&#9472; EventExplorerPage.tsx# Event table
+&#9474;           &#9474;   &#9500;&#9472;&#9472; NodesPage.tsx        # Node status
+&#9474;           &#9474;   &#9500;&#9472;&#9472; LogsPage.tsx         # Pod logs
+&#9474;           &#9474;   &#9500;&#9472;&#9472; ResourceAllocationPage.tsx # Resource usage
+&#9474;           &#9474;   &#9500;&#9472;&#9472; JvmDetailsPage.tsx   # JVM config audit
+&#9474;           &#9474;   &#9500;&#9472;&#9472; NetworkLatencyPage.tsx # Network latency
+&#9474;           &#9474;   &#9492;&#9472;&#9472; AIInsightsPage.tsx   # AI chat
+&#9474;           &#9492;&#9472;&#9472; styles/
+&#9474;               &#9492;&#9472;&#9472; index.css            # Sentinel Dark theme
+&#9474;
+&#9492;&#9472;&#9472; .venv/                           # Python virtual environment
+  </pre>
+</div>
+
+<!-- 5. Configuration Files -->
+<div class="tech-section" id="t-config">
+  <h2>5. Configuration Files</h2>
+  <table>
+    <tr><th>File</th><th>Format</th><th>Purpose</th></tr>
+    <tr><td>claude_desktop_config.json</td><td>JSON</td><td>MCP server registration for Claude Desktop (command, args, env)</td></tr>
+    <tr><td>k8s-manifests.yaml</td><td>YAML</td><td>Kubernetes manifests: namespace, deployment, service, RBAC, event-exporter</td></tr>
+    <tr><td>Dockerfile</td><td>Dockerfile</td><td>Container image for webhook receiver (python:3.12-slim, port 8000)</td></tr>
+    <tr><td>requirements.txt (root)</td><td>Text</td><td>Root Python deps: fastapi, uvicorn, pydantic, mcp[cli], requests</td></tr>
+    <tr><td>chat_ui/.env.example</td><td>Env</td><td>Template for LiteLLM environment variables</td></tr>
+    <tr><td>chat_ui/backend/requirements.txt</td><td>Text</td><td>Backend Python deps: fastapi, uvicorn, openai, pydantic, pyyaml, pyotp, qrcode</td></tr>
+    <tr><td>chat_ui/backend/skills.yaml</td><td>YAML</td><td>8 predefined AI workflow prompts (hot-reloadable)</td></tr>
+    <tr><td>chat_ui/backend/system_prompt.md</td><td>Markdown</td><td>LLM system instructions for K8s analysis (hot-reloadable)</td></tr>
+    <tr><td>chat_ui/backend/config.py</td><td>Python</td><td>Reads LITELLM_BASE_URL, LITELLM_MODEL, LITELLM_API_KEY from environment</td></tr>
+    <tr><td>chat_ui/frontend/package.json</td><td>JSON</td><td>npm dependencies and build scripts (dev, build, lint, preview)</td></tr>
+    <tr><td>chat_ui/frontend/vite.config.ts</td><td>TypeScript</td><td>Vite build configuration with React plugin</td></tr>
+    <tr><td>chat_ui/frontend/tsconfig*.json</td><td>JSON</td><td>TypeScript compiler configurations (app, node, root)</td></tr>
+    <tr><td>chat_ui/frontend/eslint.config.js</td><td>JavaScript</td><td>ESLint with TypeScript and React Hooks plugins</td></tr>
+  </table>
+</div>
+
+<!-- 6. React Frontend -->
+<div class="tech-section" id="t-react">
+  <h2>6. React Frontend (chat_ui/frontend)</h2>
+  <h3>Technology Stack</h3>
+  <p>React 19 + TypeScript + Vite 7 + React Router v7</p>
+  <h3>Entry Point</h3>
+  <p><code>src/main.tsx</code> mounts the app at <code>&lt;div id="root"&gt;</code> inside <code>index.html</code>, wrapped in <code>React.StrictMode</code>.</p>
+  <h3>Routing (App.tsx)</h3>
+  <p>Uses <code>BrowserRouter</code> with nested routes:</p>
+  <table>
+    <tr><th>Route</th><th>Component</th><th>Auth</th></tr>
+    <tr><td>/login</td><td>LoginPage</td><td>Public</td></tr>
+    <tr><td>/</td><td>DashboardPage</td><td>Protected</td></tr>
+    <tr><td>/events</td><td>EventExplorerPage</td><td>Protected</td></tr>
+    <tr><td>/nodes</td><td>NodesPage</td><td>Protected</td></tr>
+    <tr><td>/logs</td><td>LogsPage</td><td>Protected</td></tr>
+    <tr><td>/resources</td><td>ResourceAllocationPage</td><td>Protected</td></tr>
+    <tr><td>/jvm</td><td>JvmDetailsPage</td><td>Protected</td></tr>
+    <tr><td>/network</td><td>NetworkLatencyPage</td><td>Protected (cross-namespace latency)</td></tr>
+    <tr><td>/ai-insights</td><td>AIInsightsPage</td><td>Protected</td></tr>
+    <tr><td>/*</td><td>Redirect to /</td><td>&mdash;</td></tr>
+  </table>
+  <p>Protected routes are wrapped in <code>ProtectedRoute</code> (checks <code>AuthContext.isAuthenticated</code>) and <code>ChatProvider</code>.</p>
+  <h3>API Clients (src/api/)</h3>
+  <p>All API modules read the backend URL from <code>import.meta.env.VITE_API_BASE</code> or auto-detect from <code>window.location</code> with port 8001. All include <code>Authorization: Bearer</code> header from localStorage.</p>
+  <table>
+    <tr><th>File</th><th>Endpoints</th></tr>
+    <tr><td>authApi.ts</td><td>POST /api/auth/login, POST /api/auth/verify-totp</td></tr>
+    <tr><td>chatApi.ts</td><td>POST /api/chat, GET /api/skills</td></tr>
+    <tr><td>eventsApi.ts</td><td>GET /api/events, /api/events/stats, /api/events/{id}, /api/events/stream</td></tr>
+    <tr><td>clusterApi.ts</td><td>GET /api/cluster/nodes, /namespaces, /pods, /logs, /resources, /resources/trace, /jvm, /network</td></tr>
+  </table>
+  <h3>Page Details</h3>
+  <h4>LoginPage</h4>
+  <p>Three-step UI: (1) credentials form, (2) QR code setup for first-time TOTP, (3) 6-digit code entry with auto-submit.</p>
+  <h4>DashboardPage</h4>
+  <p>Four stat cards (Total/Critical/Warning/Normal), recent events table (click navigates to AI Insights), node status table.</p>
+  <h4>EventExplorerPage</h4>
+  <p>Severity filter buttons, text search, LIVE toggle (auto-polls every 5s), event table with severity badges. Clicking a row navigates to <code>/ai-insights?event={id}</code>.</p>
+  <h4>NodesPage</h4>
+  <p>Table of cluster nodes: name, status (Ready/NotReady with color indicator), roles, K8s version, OS, kernel, container runtime.</p>
+  <h4>LogsPage</h4>
+  <p>Cascading dropdowns: Namespace &rarr; Pod. Selecting a pod auto-fetches last 200 log lines in a monospace viewer.</p>
+  <h4>ResourceAllocationPage</h4>
+  <p>Namespace dropdown filter, auto-refresh toggle (15s), table of pods showing CPU/memory usage vs requests/limits with colored progress bars (green &lt;70%, amber 70-90%, red &gt;90%). "Trace" button on high-usage pods opens a modal with AI-powered root cause analysis from the LLM.</p>
+  <h4>JvmDetailsPage</h4>
+  <p>Namespace dropdown filter, table comparing expected JVM flags (from env vars: JAVA_OPTS, JAVA_TOOL_OPTIONS) vs actual runtime flags (via jcmd). Mismatch rows highlighted in amber. Expandable rows show raw env vars and jcmd output.</p>
+  <h4>NetworkLatencyPage</h4>
+  <p>Separate Source (namespace + pod dropdown) and Target (namespace dropdown) controls for cross-namespace latency testing. Services table with endpoint status. "Test Latency" button runs curl from the selected source pod to all target services (self-service tests auto-skipped). Each latency result has a "Check" button that opens a modal showing the full test process: source/target details, kubectl exec command, curl flags explained, and cross-namespace badge. Also includes network issues and network policies sections.</p>
+  <h4>AIInsightsPage</h4>
+  <p>Full chat interface with skill bar, message bubbles (markdown rendered), collapsible tool call cards, and animated loading indicator. Auto-triggers analysis when <code>?event={id}</code> URL param is present.</p>
+  <h3>Component Library</h3>
+  <table>
+    <tr><th>Component</th><th>Purpose</th></tr>
+    <tr><td>AppLayout</td><td>Main layout shell with Sidebar + Outlet</td></tr>
+    <tr><td>Sidebar</td><td>Navigation links with active state, chat history count, logout button</td></tr>
+    <tr><td>ProtectedRoute</td><td>Auth guard redirecting unauthenticated users to /login</td></tr>
+    <tr><td>SeverityBadge</td><td>Colored badge for CRITICAL/WARNING/INFO</td></tr>
+    <tr><td>ChatInput</td><td>Textarea with send button, Enter to submit, Shift+Enter for newline</td></tr>
+    <tr><td>MessageList</td><td>Scrollable message feed with auto-scroll to bottom</td></tr>
+    <tr><td>MessageBubble</td><td>Individual message with markdown rendering (react-markdown + remark-gfm)</td></tr>
+    <tr><td>ToolCallDisplay</td><td>Collapsible card showing tool name, arguments (JSON), and result</td></tr>
+    <tr><td>SkillBar</td><td>Horizontal bar of quick-action skill buttons fetched from GET /api/skills</td></tr>
+    <tr><td>LoadingIndicator</td><td>Animated "Thinking..." dots shown during LLM processing</td></tr>
+  </table>
+  <h3>Styling</h3>
+  <p>Single CSS file at <code>src/styles/index.css</code> (~1,259 lines) implementing the full Sentinel Dark theme using CSS custom properties. No CSS-in-JS or CSS modules.</p>
+</div>
+
+<!-- 7. Backend API -->
+<div class="tech-section" id="t-backend">
+  <h2>7. Backend API (FastAPI)</h2>
+  <h3>Entry Point: main.py</h3>
+  <p>Creates a FastAPI app titled "Sentinel K8s Dashboard API", registers CORS middleware (allow all origins), and mounts three routers plus inline endpoints.</p>
+  <h3>File-by-File Breakdown</h3>
+  <h4>auth.py &mdash; Authentication &amp; 2FA</h4>
+  <p>Two-step login using TOTP (RFC 6238). Functions:</p>
+  <ul>
+    <li><code>login(req)</code> &mdash; Validates username/password, generates temp_token, optionally returns QR code for first-time setup</li>
+    <li><code>verify_totp(req)</code> &mdash; Validates 6-digit TOTP code, issues session token</li>
+    <li><code>require_auth(request)</code> &mdash; FastAPI dependency that validates Bearer token from header</li>
+    <li><code>_get_verified_secret()</code> &mdash; Reads or generates TOTP secret from .totp_secret file</li>
+    <li><code>_generate_qr_base64(secret, username)</code> &mdash; Creates QR code PNG as base64 string</li>
+  </ul>
+  <h4>config.py &mdash; Environment Config</h4>
+  <p>Reads three environment variables with defaults: <code>LITELLM_BASE_URL</code>, <code>LITELLM_MODEL</code>, <code>LITELLM_API_KEY</code>.</p>
+  <h4>models.py &mdash; Pydantic Schemas</h4>
+  <p>Defines <code>ChatMessage</code> (role, content, tool_calls, tool_call_id), <code>ChatRequest</code> (messages list), <code>ChatResponse</code> (new_messages list).</p>
+  <h4>llm_client.py &mdash; LLM Client Factory</h4>
+  <p>Creates an OpenAI SDK client pointed at the LiteLLM proxy using <code>config.LITELLM_BASE_URL</code> and <code>config.LITELLM_API_KEY</code>.</p>
+  <h4>chat_handler.py &mdash; LLM Chat Orchestration</h4>
+  <p>Core intelligence engine. Handles multi-turn conversations with tool calling:</p>
+  <ul>
+    <li><code>handle_chat(messages)</code> &mdash; Main entry: runs the LLM &harr; tool loop, returns new messages</li>
+    <li><code>_expand_skill(messages)</code> &mdash; Detects <code>[Skill Label]</code> prefix and replaces with full prompt from skills.yaml</li>
+    <li><code>_load_system_prompt()</code> &mdash; Reads system_prompt.md from disk</li>
+    <li><code>_load_skills()</code> &mdash; Reads skills.yaml from disk</li>
+    <li><code>reload_config()</code> &mdash; Hot-reloads both files without server restart</li>
+  </ul>
+  <h4>tool_executor.py &mdash; Tool Dispatch</h4>
+  <p>Adds the parent project directory to <code>sys.path</code> and imports all 10 tool functions from <code>mcp_server.py</code>. Maps tool names to functions and executes with LLM-provided arguments. Truncates results over 8,000 characters.</p>
+  <h4>tool_registry.py &mdash; Tool Definitions</h4>
+  <p>Contains OpenAI function-calling JSON schema definitions for all 10 tools. These schemas tell the LLM what tools are available.</p>
+  <h4>events_api.py &mdash; Event Management</h4>
+  <p>Auto-initializes the <code>k8s_events</code> table on import. Endpoints:</p>
+  <table>
+    <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+    <tr><td>/api/events</td><td>GET</td><td>List events with filters (severity, namespace, search) + pagination</td></tr>
+    <tr><td>/api/events/stats</td><td>GET</td><td>Counts grouped by severity and status</td></tr>
+    <tr><td>/api/events/stream</td><td>GET</td><td>SSE endpoint &mdash; polls DB every 2s for new events</td></tr>
+    <tr><td>/api/events/{event_id}</td><td>GET</td><td>Single event with parsed raw_payload</td></tr>
+  </table>
+  <h4>cluster_api.py &mdash; Kubernetes Cluster Access</h4>
+  <p>Wraps <code>kubectl</code> via <code>subprocess</code> and parses JSON output. Includes helper functions for CPU/memory parsing and JVM flag comparison:</p>
+  <table>
+    <tr><th>Endpoint</th><th>kubectl Command</th><th>Returns</th></tr>
+    <tr><td>/api/cluster/nodes</td><td>kubectl get nodes -o json</td><td>name, status, roles, version, OS, kernel, runtime</td></tr>
+    <tr><td>/api/cluster/namespaces</td><td>kubectl get namespaces -o json</td><td>name, status, created</td></tr>
+    <tr><td>/api/cluster/pods</td><td>kubectl get pods -n X -o json</td><td>name, status, ready, restarts, node</td></tr>
+    <tr><td>/api/cluster/logs</td><td>kubectl logs -n X Y --tail=N</td><td>raw log text</td></tr>
+    <tr><td>/api/cluster/resources</td><td>kubectl top pods + get pods -o json</td><td>per-pod CPU/memory: usage, requests, limits, percentages</td></tr>
+    <tr><td>/api/cluster/resources/trace</td><td>kubectl describe + top + logs + events</td><td>AI-powered root cause analysis (LLM markdown)</td></tr>
+    <tr><td>/api/cluster/jvm</td><td>kubectl get pods + exec jcmd</td><td>JVM expected vs actual flags, mismatches per container</td></tr>
+    <tr><td>/api/cluster/network</td><td>kubectl get svc + endpoints + netpol + exec curl</td><td>services, endpoints, policies, cross-namespace latency (source_pod, source_ns params)</td></tr>
+  </table>
+</div>
+
+<!-- 8. MCP Server -->
+<div class="tech-section" id="t-mcp">
+  <h2>8. MCP Server Implementation</h2>
+  <p><code>mcp_server.py</code> uses the <code>FastMCP</code> framework from the <code>mcp</code> package to expose 10 Kubernetes analysis tools via the Model Context Protocol.</p>
+  <h3>Architecture</h3>
+  <ul>
+    <li><strong>Framework:</strong> <code>from mcp.server.fastmcp import FastMCP</code></li>
+    <li><strong>Transport:</strong> stdio (reads/writes JSON-RPC over stdin/stdout)</li>
+    <li><strong>Database:</strong> Connects to <code>k8s_events.db</code> at the same path as webhook_receiver</li>
+    <li><strong>kubectl:</strong> Runs subprocess commands for live cluster data</li>
+  </ul>
+  <h3>Tool Functions</h3>
+  <p>Each function is decorated with <code>@mcp.tool()</code> and directly queries SQLite or runs kubectl:</p>
+  <table>
+    <tr><th>Function</th><th>Parameters</th><th>Logic</th></tr>
+    <tr><td>list_events</td><td>status, severity, namespace, limit</td><td>SQL query with dynamic WHERE clauses</td></tr>
+    <tr><td>get_event</td><td>event_id</td><td>SQL lookup by event_id, parses raw_payload JSON</td></tr>
+    <tr><td>analyze_event</td><td>event_id</td><td>Gets event, generates diagnostic template based on reason, updates status to "analyzed"</td></tr>
+    <tr><td>get_cluster_info</td><td>command</td><td>Validates read-only kubectl, runs subprocess, returns output</td></tr>
+    <tr><td>apply_fix</td><td>command, dry_run</td><td>Validates non-destructive kubectl, appends --dry-run=client if dry_run=True</td></tr>
+    <tr><td>mark_resolved</td><td>event_id, resolution_note</td><td>Updates event status to "resolved" in DB</td></tr>
+    <tr><td>get_event_summary</td><td>(none)</td><td>SQL aggregate: counts by severity/status + latest 5 events</td></tr>
+    <tr><td>trace_resource_usage</td><td>pod, namespace</td><td>Gathers kubectl describe/top/events/logs, returns markdown root cause report</td></tr>
+    <tr><td>get_jvm_details</td><td>namespace</td><td>Scans Java pods, compares expected vs actual JVM flags, reports mismatches</td></tr>
+    <tr><td>get_network_status</td><td>namespace, test_latency</td><td>Services, endpoints, network events/policies; optional latency testing</td></tr>
+  </table>
+  <h3>Shared Code Path</h3>
+  <p>The backend's <code>tool_executor.py</code> imports these same functions directly from <code>mcp_server.py</code>, so both the web dashboard and Claude Desktop execute identical tool logic.</p>
+</div>
+
+<!-- 9. Claude Desktop Integration -->
+<div class="tech-section" id="t-claude">
+  <h2>9. Claude Desktop Integration</h2>
+  <h3>Configuration</h3>
+  <p>The file <code>claude_desktop_config.json</code> registers the MCP server with Claude Desktop:</p>
+  <pre>{
+  "mcpServers": {
+    "k8s-event-analyzer": {
+      "command": "/path/to/.venv/bin/python3",
+      "args": ["/path/to/k8s_webhook/mcp_server.py"],
+      "env": {
+        "KUBECONFIG": "/Users/.../.kube/config"
+      }
+    }
+  }
+}</pre>
+  <h3>How It Works</h3>
+  <ol>
+    <li>Claude Desktop launches the MCP server as a subprocess</li>
+    <li>Communication happens via stdio (JSON-RPC over stdin/stdout)</li>
+    <li>When a user asks about Kubernetes in Claude Desktop, the model can invoke any of the 10 tools</li>
+    <li>The MCP server reads from the same <code>k8s_events.db</code> as the webhook receiver</li>
+    <li>kubectl commands are executed via subprocess for live cluster data</li>
+  </ol>
+  <h3>Setup</h3>
+  <ol>
+    <li>Copy <code>claude_desktop_config.json</code> to Claude Desktop's config directory</li>
+    <li>Update the <code>command</code> path to point to the project's Python interpreter</li>
+    <li>Update the <code>args</code> path to point to <code>mcp_server.py</code></li>
+    <li>Set <code>KUBECONFIG</code> to your kubectl configuration file</li>
+    <li>Restart Claude Desktop to load the new MCP server</li>
+  </ol>
+</div>
+
+<!-- 10. Webhook Setup -->
+<div class="tech-section" id="t-webhook">
+  <h2>10. Webhook Setup</h2>
+  <h3>webhook_receiver.py</h3>
+  <p>FastAPI service (port 8000) that receives Kubernetes events via HTTP POST.</p>
+  <h4>Endpoints</h4>
+  <ul>
+    <li><code>POST /webhook/event</code> &mdash; Receives K8s event JSON payload</li>
+    <li><code>GET /health</code> &mdash; Health check</li>
+  </ul>
+  <h4>Event Processing Pipeline</h4>
+  <ol>
+    <li>Receives event JSON from event_watcher or kube-event-exporter</li>
+    <li>Extracts fields: kind, name, namespace, reason, message</li>
+    <li>Classifies severity based on the <code>reason</code> field</li>
+    <li>Generates a 16-character hash as <code>event_id</code></li>
+    <li>Stores with ISO 8601 timestamps and initial status "new"</li>
+  </ol>
+  <h3>event_watcher.py</h3>
+  <p>CLI tool that streams events from a Kubernetes cluster:</p>
+  <ol>
+    <li>Runs <code>kubectl get events --watch -o json</code> as a subprocess</li>
+    <li>Parses streaming JSON events line by line</li>
+    <li>POSTs each event to webhook_receiver at port 8000</li>
+    <li>Supports <code>--namespace</code> flag for namespace filtering</li>
+  </ol>
+  <h3>Kubernetes Event Exporter (Alternative)</h3>
+  <p>The <code>k8s-manifests.yaml</code> includes a kube-event-exporter deployment that can replace event_watcher.py for in-cluster event collection. It forwards events to the webhook receiver's ClusterIP service.</p>
+</div>
+
+<!-- 11. Skill System -->
+<div class="tech-section" id="t-skills">
+  <h2>11. Skill System</h2>
+  <h3>Overview</h3>
+  <p>Skills are predefined multi-step prompts stored in <code>chat_ui/backend/skills.yaml</code>. They provide quick-start analysis workflows accessible via buttons in the UI.</p>
+  <h3>Defined Skills</h3>
+  <table>
+    <tr><th>Skill ID</th><th>Label</th><th>Description</th></tr>
+    <tr><td>health_check</td><td>Cluster Health Check</td><td>Full cluster assessment: event summary, node status, critical events</td></tr>
+    <tr><td>pod_status</td><td>Pod Status Overview</td><td>All pods across namespaces, identify unhealthy ones</td></tr>
+    <tr><td>recent_incidents</td><td>Recent Incidents</td><td>Top 3 critical/warning events with detailed analysis</td></tr>
+    <tr><td>resource_usage</td><td>Resource Usage</td><td>Node and pod resource utilization via kubectl top</td></tr>
+    <tr><td>namespace_audit</td><td>Namespace Audit</td><td>Audit all resources in a specific namespace</td></tr>
+    <tr><td>resource_trace</td><td>Resource Trace</td><td>Trace high resource usage on pods &mdash; AI root cause analysis</td></tr>
+    <tr><td>jvm_analysis</td><td>JVM Analysis</td><td>Analyze JVM configuration for Java pods &mdash; expected vs actual flags</td></tr>
+    <tr><td>network_check</td><td>Network Check</td><td>Check service connectivity, latency, and network policies</td></tr>
+  </table>
+  <h3>Expansion Flow</h3>
+  <ol>
+    <li>User clicks a skill button in the UI</li>
+    <li>Frontend sends message: <code>[Cluster Health Check] Run a full cluster health assessment</code></li>
+    <li>Backend <code>_expand_skill()</code> in <code>chat_handler.py</code> detects the <code>[Label]</code> prefix</li>
+    <li>Matches against loaded skills by label</li>
+    <li>Replaces the entire message content with the full multi-line prompt from skills.yaml</li>
+    <li>LLM receives the expanded prompt and calls tools as needed</li>
+  </ol>
+  <h3>Hot Reload</h3>
+  <p>Both <code>skills.yaml</code> and <code>system_prompt.md</code> can be reloaded without restarting the backend by calling <code>POST /api/reload</code>.</p>
+  <h3>Adding Custom Skills</h3>
+  <pre>my_custom_skill:
+  label: My Custom Check
+  description: Run my custom diagnostic
+  prompt: |
+    Perform a custom check:
+    1. Run 'kubectl get deployments --all-namespaces'
+    2. Check for any deployments with 0 ready replicas
+    3. Analyze the root cause
+    4. Suggest remediation steps</pre>
+</div>
+
+<!-- 12. State Management -->
+<div class="tech-section" id="t-state">
+  <h2>12. State Management</h2>
+  <h3>Frontend State</h3>
+  <h4>AuthContext (context/AuthContext.tsx)</h4>
+  <p>React Context providing authentication state across the app:</p>
+  <ul>
+    <li><strong>State:</strong> token (string | null), isAuthenticated (boolean)</li>
+    <li><strong>Methods:</strong> login(username, password), verifyTotp(tempToken, code), logout()</li>
+    <li><strong>Persistence:</strong> Token stored in <code>localStorage["auth_token"]</code></li>
+    <li><strong>On mount:</strong> Checks localStorage for existing token</li>
+  </ul>
+  <h4>ChatContext (context/ChatContext.tsx)</h4>
+  <p>React Context managing chat state for the AI Insights page:</p>
+  <ul>
+    <li><strong>State:</strong> messages (ChatMessage[]), isLoading (boolean), error (string | null)</li>
+    <li><strong>Methods:</strong> sendMessage(content), clearChat()</li>
+    <li><strong>API:</strong> Calls POST /api/chat with full message history</li>
+  </ul>
+  <h4>Page-Level State</h4>
+  <p>Each page manages its own data via <code>useState</code> and <code>useEffect</code>. No global state library (Redux, Zustand, etc.) is used. Data is fetched on mount and refreshed as needed.</p>
+  <h3>Backend State</h3>
+  <ul>
+    <li><strong>_tokens set:</strong> In-memory set of active session tokens (cleared on restart)</li>
+    <li><strong>_temp_tokens dict:</strong> In-memory map of temp tokens to TOTP secrets (single-use, cleared after verification)</li>
+    <li><strong>SYSTEM_PROMPT:</strong> Module-level string loaded from system_prompt.md on startup</li>
+    <li><strong>SKILLS:</strong> Module-level dict loaded from skills.yaml on startup</li>
+    <li><strong>SQLite DB:</strong> Persistent event storage (survives restarts)</li>
+    <li><strong>.totp_secret file:</strong> Persistent TOTP secret (survives restarts)</li>
+  </ul>
+</div>
+
+<!-- 13. API Layers -->
+<div class="tech-section" id="t-api">
+  <h2>13. API Layers</h2>
+  <h3>Layer 1: Event Collection API (Port 8000)</h3>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
+    <tr><td>POST</td><td>/webhook/event</td><td>No</td><td>Receives K8s event JSON, classifies, stores</td></tr>
+    <tr><td>GET</td><td>/health</td><td>No</td><td>Health check</td></tr>
+  </table>
+  <h3>Layer 2: Dashboard API (Port 8001)</h3>
+  <h4>Authentication Endpoints</h4>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
+    <tr><td>POST</td><td>/api/auth/login</td><td>No</td><td>Step 1: validate password, return temp_token (+ QR on first login)</td></tr>
+    <tr><td>POST</td><td>/api/auth/verify-totp</td><td>No</td><td>Step 2: validate TOTP code, return session token</td></tr>
+  </table>
+  <h4>Event Endpoints</h4>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
+    <tr><td>GET</td><td>/api/events</td><td>Bearer</td><td>List events with filters (severity, namespace, search, limit, offset)</td></tr>
+    <tr><td>GET</td><td>/api/events/stats</td><td>Bearer</td><td>Aggregate counts by severity and status</td></tr>
+    <tr><td>GET</td><td>/api/events/{id}</td><td>Bearer</td><td>Single event details with parsed raw_payload</td></tr>
+    <tr><td>GET</td><td>/api/events/stream</td><td>Bearer</td><td>SSE stream polling DB every 2 seconds</td></tr>
+  </table>
+  <h4>Cluster Endpoints</h4>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
+    <tr><td>GET</td><td>/api/cluster/nodes</td><td>Bearer</td><td>Cluster node info via kubectl</td></tr>
+    <tr><td>GET</td><td>/api/cluster/namespaces</td><td>Bearer</td><td>Namespace list</td></tr>
+    <tr><td>GET</td><td>/api/cluster/pods?namespace=X</td><td>Bearer</td><td>Pods in namespace</td></tr>
+    <tr><td>GET</td><td>/api/cluster/logs?namespace=X&amp;pod=Y&amp;lines=N</td><td>Bearer</td><td>Pod log output</td></tr>
+    <tr><td>GET</td><td>/api/cluster/resources?namespace=X</td><td>Bearer</td><td>Pod CPU/memory usage vs requests/limits</td></tr>
+    <tr><td>GET</td><td>/api/cluster/resources/trace?pod=X&amp;namespace=Y</td><td>Bearer</td><td>AI-powered resource trace analysis</td></tr>
+    <tr><td>GET</td><td>/api/cluster/jvm?namespace=X</td><td>Bearer</td><td>JVM expected vs actual flags for Java pods</td></tr>
+    <tr><td>GET</td><td>/api/cluster/network?namespace=X&amp;test_latency=bool&amp;source_pod=P&amp;source_ns=N</td><td>Bearer</td><td>Services, endpoints, policies, cross-namespace latency</td></tr>
+  </table>
+  <h4>AI &amp; Admin Endpoints</h4>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
+    <tr><td>POST</td><td>/api/chat</td><td>Bearer</td><td>Multi-turn LLM chat with 10 tools</td></tr>
+    <tr><td>GET</td><td>/api/skills</td><td>Bearer</td><td>List predefined skill prompts</td></tr>
+    <tr><td>POST</td><td>/api/reload</td><td>Bearer</td><td>Hot-reload system_prompt.md and skills.yaml</td></tr>
+    <tr><td>GET</td><td>/api/health</td><td>No</td><td>Health check</td></tr>
+  </table>
+</div>
+
+<!-- 14. Authentication Mechanism -->
+<div class="tech-section" id="t-auth">
+  <h2>14. Authentication Mechanism</h2>
+  <h3>Two-Factor Authentication (TOTP)</h3>
+  <p>Login uses a two-step process based on TOTP (RFC 6238), compatible with Google Authenticator, Authy, and similar apps.</p>
+  <h4>Step 1: Password Validation</h4>
+  <pre>POST /api/auth/login
+Body: { "username": "admin", "password": "admin" }
+
+Response (first time):
+{
+  "temp_token": "&lt;64-char hex&gt;",
+  "requires_totp": true,
+  "setup_required": true,
+  "qr_image": "&lt;base64 PNG&gt;",
+  "secret": "JBSWY3DPEHPK3PXP..."
+}
+
+Response (returning user):
+{
+  "temp_token": "&lt;64-char hex&gt;",
+  "requires_totp": true,
+  "setup_required": false
+}</pre>
+  <h4>Step 2: TOTP Verification</h4>
+  <pre>POST /api/auth/verify-totp
+Body: { "temp_token": "&lt;64-char hex&gt;", "code": "123456" }
+
+Response: { "token": "&lt;64-char hex session token&gt;" }</pre>
+  <h3>Session Management</h3>
+  <ul>
+    <li>Session tokens are 64-character hex strings stored in an in-memory <code>_tokens</code> set</li>
+    <li>Tokens are cleared on backend restart (users must re-login)</li>
+    <li>Frontend stores token in <code>localStorage["auth_token"]</code></li>
+    <li>All protected endpoints require <code>Authorization: Bearer &lt;token&gt;</code></li>
+    <li><code>require_auth()</code> FastAPI dependency validates the token on every request</li>
+  </ul>
+  <h3>TOTP Secret Storage</h3>
+  <table>
+    <tr><th>Location</th><th>Data</th><th>Lifetime</th></tr>
+    <tr><td>chat_ui/backend/.totp_secret</td><td>Base32 TOTP secret</td><td>Permanent (survives restarts)</td></tr>
+    <tr><td>Google Authenticator (phone)</td><td>Same secret as QR</td><td>Until manually removed</td></tr>
+    <tr><td>Backend _tokens set</td><td>Session tokens</td><td>Until backend restart</td></tr>
+    <tr><td>Browser localStorage</td><td>Session token</td><td>Until logout or manual clear</td></tr>
+  </table>
+  <h3>Reset 2FA</h3>
+  <p>Delete <code>chat_ui/backend/.totp_secret</code> and restart the backend. The next login will show the QR setup screen again.</p>
+</div>
+
+<!-- 15. Deployment Configuration -->
+<div class="tech-section" id="t-deploy">
+  <h2>15. Deployment Configuration</h2>
+  <h3>Docker (webhook_receiver only)</h3>
+  <pre>FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY webhook_receiver.py .
+COPY mcp_server.py .
+EXPOSE 8000
+CMD ["uvicorn", "webhook_receiver:app", "--host", "0.0.0.0", "--port", "8000"]</pre>
+  <h3>Kubernetes Manifests (k8s-manifests.yaml)</h3>
+  <table>
+    <tr><th>Resource</th><th>Name</th><th>Details</th></tr>
+    <tr><td>Namespace</td><td>k8s-webhook</td><td>Isolated namespace for all resources</td></tr>
+    <tr><td>Deployment</td><td>webhook-receiver</td><td>1 replica, port 8000, emptyDir volume, health probes</td></tr>
+    <tr><td>Service</td><td>webhook-receiver</td><td>ClusterIP, port 80 &rarr; 8000</td></tr>
+    <tr><td>ClusterRole</td><td>event-reader</td><td>get, list, watch on events</td></tr>
+    <tr><td>ClusterRoleBinding</td><td>event-reader-binding</td><td>Binds event-reader to default SA in k8s-webhook</td></tr>
+    <tr><td>ConfigMap</td><td>event-exporter-config</td><td>Config for kube-event-exporter routing</td></tr>
+    <tr><td>Deployment</td><td>event-exporter</td><td>resmoio/kubernetes-event-exporter, forwards events to webhook service</td></tr>
+  </table>
+  <h3>Local Development</h3>
+  <pre># Terminal 1: Backend (port 8001)
+cd chat_ui
+export LITELLM_BASE_URL='https://your-server/v1'
+export LITELLM_MODEL='openai/gpt-4o'
+export LITELLM_API_KEY='sk-your-key'
+python -m uvicorn backend.main:app --port 8001 --reload
+
+# Terminal 2: Frontend (port 5173)
+cd chat_ui/frontend
+npm run dev
+
+# Terminal 3 (optional): Webhook receiver (port 8000)
+python -m uvicorn webhook_receiver:app --port 8000
+
+# Terminal 4 (optional): Event watcher
+python event_watcher.py</pre>
+</div>
+
+<!-- 16. Runtime Dependencies -->
+<div class="tech-section" id="t-deps">
+  <h2>16. Runtime Dependencies</h2>
+  <h3>Root Python (requirements.txt)</h3>
+  <table>
+    <tr><th>Package</th><th>Version</th><th>Purpose</th></tr>
+    <tr><td>fastapi</td><td>&ge; 0.110.0</td><td>Web framework for webhook receiver</td></tr>
+    <tr><td>uvicorn[standard]</td><td>&ge; 0.29.0</td><td>ASGI server</td></tr>
+    <tr><td>pydantic</td><td>&ge; 2.0</td><td>Data validation</td></tr>
+    <tr><td>mcp[cli]</td><td>&ge; 1.26.0</td><td>MCP server framework for Claude Desktop</td></tr>
+    <tr><td>requests</td><td>&ge; 2.31.0</td><td>HTTP client (used by event_watcher)</td></tr>
+  </table>
+  <h3>Backend Python (chat_ui/backend/requirements.txt)</h3>
+  <table>
+    <tr><th>Package</th><th>Version</th><th>Purpose</th></tr>
+    <tr><td>fastapi</td><td>&ge; 0.110.0</td><td>Web framework</td></tr>
+    <tr><td>uvicorn[standard]</td><td>&ge; 0.29.0</td><td>ASGI server</td></tr>
+    <tr><td>openai</td><td>&ge; 1.12.0</td><td>LLM client (OpenAI-compatible, pointed at LiteLLM)</td></tr>
+    <tr><td>pydantic</td><td>&ge; 2.0</td><td>Data validation</td></tr>
+    <tr><td>pyyaml</td><td>&ge; 6.0</td><td>Skills config parsing</td></tr>
+    <tr><td>pyotp</td><td>&ge; 2.9.0</td><td>TOTP code generation/verification (2FA)</td></tr>
+    <tr><td>qrcode[pil]</td><td>&ge; 7.4.2</td><td>QR code image generation for authenticator setup</td></tr>
+  </table>
+  <h3>Frontend (package.json)</h3>
+  <table>
+    <tr><th>Package</th><th>Version</th><th>Purpose</th></tr>
+    <tr><td>react</td><td>^19.2.0</td><td>UI framework</td></tr>
+    <tr><td>react-dom</td><td>^19.2.0</td><td>DOM rendering</td></tr>
+    <tr><td>react-router-dom</td><td>^7.13.1</td><td>Client-side routing</td></tr>
+    <tr><td>react-markdown</td><td>^10.1.0</td><td>Markdown rendering in chat messages</td></tr>
+    <tr><td>remark-gfm</td><td>^4.0.1</td><td>GitHub-flavored markdown plugin</td></tr>
+    <tr><td>typescript</td><td>~5.9.3</td><td>Type safety</td></tr>
+    <tr><td>vite</td><td>^7.3.1</td><td>Build tool and dev server</td></tr>
+  </table>
+  <h3>System Dependencies</h3>
+  <ul>
+    <li><strong>kubectl</strong> &mdash; Required for cluster_api.py and mcp_server.py</li>
+    <li><strong>sqlite3</strong> &mdash; Built into Python (no separate install)</li>
+    <li><strong>LiteLLM Proxy</strong> &mdash; External service (or any OpenAI-compatible endpoint)</li>
+  </ul>
+</div>
+
+<!-- 17. Version Requirements -->
+<div class="tech-section" id="t-versions">
+  <h2>17. Version Requirements</h2>
+  <table>
+    <tr><th>Component</th><th>Minimum Version</th><th>Notes</th></tr>
+    <tr><td>Python</td><td>3.11+</td><td>Required for FastAPI, type hints, and async features</td></tr>
+    <tr><td>Node.js</td><td>18+</td><td>Required for Vite 7 and React 19</td></tr>
+    <tr><td>npm</td><td>9+</td><td>Comes with Node.js 18+</td></tr>
+    <tr><td>kubectl</td><td>1.25+</td><td>Must be configured with cluster access</td></tr>
+    <tr><td>Docker</td><td>20+</td><td>Optional, for containerized deployment</td></tr>
+    <tr><td>Kubernetes</td><td>1.25+</td><td>Optional, for k8s-manifests.yaml deployment</td></tr>
+  </table>
+</div>
+
+<!-- 18. Database Schema -->
+<div class="tech-section" id="t-db">
+  <h2>18. Database Schema</h2>
+  <h3>SQLite Database: k8s_events.db</h3>
+  <p>Located at project root. WAL mode enabled for safe concurrent reads/writes across multiple processes.</p>
+  <pre>CREATE TABLE k8s_events (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id    TEXT UNIQUE NOT NULL,     -- 16-char hash
+    event_type  TEXT NOT NULL,            -- "k8s-event", "admission", "alert"
+    kind        TEXT,                     -- "Pod", "Node", "Deployment", etc.
+    name        TEXT,                     -- resource name
+    namespace   TEXT,                     -- K8s namespace
+    reason      TEXT,                     -- "CrashLoopBackOff", "Pulled", etc.
+    message     TEXT,                     -- full event message
+    severity    TEXT DEFAULT 'info',      -- "info", "warning", "critical"
+    raw_payload TEXT NOT NULL,            -- full JSON payload
+    status      TEXT DEFAULT 'new',       -- "new", "analyzed", "resolved"
+    analysis    TEXT,                     -- analysis notes (set by analyze_event)
+    created_at  TEXT NOT NULL,            -- ISO 8601 timestamp
+    updated_at  TEXT NOT NULL             -- ISO 8601 timestamp
+);
+
+CREATE INDEX idx_status   ON k8s_events(status);
+CREATE INDEX idx_severity ON k8s_events(severity);
+CREATE INDEX idx_created  ON k8s_events(created_at);</pre>
+  <h3>Severity Classification Rules</h3>
+  <table>
+    <tr><th>Severity</th><th>Trigger Reasons</th></tr>
+    <tr><td><span class="badge badge-red">critical</span></td><td>CrashLoopBackOff, OOMKilled, FailedScheduling, ImagePullBackOff, ErrImagePull, NodeNotReady, FailedCreate, FailedAttachVolume, FailedDetachVolume</td></tr>
+    <tr><td><span class="badge badge-amber">warning</span></td><td>BackOff, Unhealthy, FailedMount, Evicted, DeadlineExceeded, Warning</td></tr>
+    <tr><td><span class="badge badge-green">info</span></td><td>Everything else (Normal events: Pulled, Scheduled, Created, Started, etc.)</td></tr>
+  </table>
+  <h3>Status Lifecycle</h3>
+  <p><code>new</code> &rarr; <code>analyzed</code> (after analyze_event tool) &rarr; <code>resolved</code> (after mark_resolved tool)</p>
+</div>
+
+<!-- 19. AI Tool System -->
+<div class="tech-section" id="t-tools">
+  <h2>19. AI Tool System (10 Tools)</h2>
+  <p>The LLM has access to 10 tools that it can call autonomously during a conversation. These tools are available in both the web dashboard (via tool_executor.py) and Claude Desktop (via MCP server).</p>
+  <table>
+    <tr><th>#</th><th>Tool</th><th>Parameters</th><th>Description</th></tr>
+    <tr><td>1</td><td>list_events</td><td>status, severity, namespace, limit</td><td>Browse events with filters</td></tr>
+    <tr><td>2</td><td>get_event</td><td>event_id</td><td>Get full details of a specific event</td></tr>
+    <tr><td>3</td><td>analyze_event</td><td>event_id</td><td>Run diagnostics, get suggested fixes, mark as analyzed</td></tr>
+    <tr><td>4</td><td>get_cluster_info</td><td>command</td><td>Run read-only kubectl (get, describe, logs, top, version)</td></tr>
+    <tr><td>5</td><td>apply_fix</td><td>command, dry_run</td><td>Execute kubectl fix &mdash; dry-run by default for safety</td></tr>
+    <tr><td>6</td><td>mark_resolved</td><td>event_id, resolution_note</td><td>Mark event as resolved after fix</td></tr>
+    <tr><td>7</td><td>get_event_summary</td><td>&mdash;</td><td>Dashboard overview: counts by severity/status + latest 5 events</td></tr>
+    <tr><td>8</td><td>trace_resource_usage</td><td>pod, namespace</td><td>Gather describe, top, events, logs for a pod &mdash; return root cause analysis</td></tr>
+    <tr><td>9</td><td>get_jvm_details</td><td>namespace</td><td>Scan Java pods, compare expected vs actual JVM flags, report mismatches</td></tr>
+    <tr><td>10</td><td>get_network_status</td><td>namespace, test_latency</td><td>Service map, endpoints, network policies; optional latency testing</td></tr>
+  </table>
+  <h3>Safety Mechanisms</h3>
+  <ul>
+    <li><strong>get_cluster_info:</strong> Only allows read-only kubectl subcommands (get, describe, logs, top, version). Blocks write operations (delete, apply, patch, edit, create).</li>
+    <li><strong>apply_fix:</strong> Defaults to <code>dry_run=True</code>, appending <code>--dry-run=client</code>. User must explicitly confirm before live execution. Blocks destructive commands (delete namespace, drain, cordon, taint).</li>
+    <li><strong>Tool result truncation:</strong> Results over 8,000 characters are truncated to prevent LLM context overflow.</li>
+    <li><strong>Max 10 tool rounds:</strong> The chat loop stops after 10 LLM &harr; tool iterations to prevent infinite loops.</li>
+  </ul>
+  <h3>Analysis Templates</h3>
+  <p>The <code>analyze_event</code> tool provides specialized diagnostics based on the event's reason:</p>
+  <table>
+    <tr><th>Reason</th><th>Diagnostic Checks</th></tr>
+    <tr><td>CrashLoopBackOff</td><td>Check logs, env vars, liveness probes, resource limits</td></tr>
+    <tr><td>OOMKilled</td><td>Memory limit analysis, profiling suggestions</td></tr>
+    <tr><td>ImagePullBackOff</td><td>Registry access, image name verification, pull secrets</td></tr>
+    <tr><td>FailedScheduling</td><td>Node resources, affinity rules, PVC binding</td></tr>
+    <tr><td>Unhealthy</td><td>Probe endpoint verification, timeout tuning</td></tr>
+    <tr><td>Generic</td><td>Describe resource, check logs, review recent events</td></tr>
+  </table>
+</div>
+
+<!-- 20. Security Considerations -->
+<div class="tech-section" id="t-security">
+  <h2>20. Security Considerations</h2>
+  <h3>Authentication</h3>
+  <ul>
+    <li>Two-factor authentication: password + TOTP (RFC 6238)</li>
+    <li>Session tokens: 64-char cryptographic hex, stored in-memory (not in DB)</li>
+    <li>Temp tokens: Single-use, cleared after TOTP verification</li>
+    <li>All protected endpoints require <code>Authorization: Bearer</code> header</li>
+    <li>TOTP secret persisted to file (survives restarts), session tokens do not</li>
+  </ul>
+  <h3>Tool Execution Safety</h3>
+  <ul>
+    <li><code>get_cluster_info</code>: Whitelist of read-only kubectl subcommands</li>
+    <li><code>apply_fix</code>: Dry-run by default, blocklist of destructive commands</li>
+    <li>Result truncation to 8,000 chars prevents context overflow</li>
+    <li>Max 10 tool rounds prevents infinite loops</li>
+  </ul>
+  <h3>Network Security</h3>
+  <ul>
+    <li>CORS middleware configured (currently allows all origins for development)</li>
+    <li>No secrets in source code &mdash; all credentials via environment variables</li>
+    <li>SQLite WAL mode for safe concurrent access</li>
+    <li>Webhook receiver is unauthenticated (intended for internal/cluster use)</li>
+  </ul>
+  <h3>Recommendations for Production</h3>
+  <ul>
+    <li>Restrict CORS origins to specific domains</li>
+    <li>Add authentication to webhook receiver endpoint</li>
+    <li>Use HTTPS for all external communication</li>
+    <li>Store session tokens in a persistent store (Redis) for multi-instance deployments</li>
+    <li>Rotate LITELLM_API_KEY periodically</li>
+    <li>Implement rate limiting on authentication endpoints</li>
+  </ul>
+</div>
+
+<!-- 21. Environment Variables -->
+<div class="tech-section" id="t-env">
+  <h2>21. Environment Variables</h2>
+  <table>
+    <tr><th>Variable</th><th>Default</th><th>Required For</th><th>Description</th></tr>
+    <tr><td>LITELLM_BASE_URL</td><td>http://localhost:4000/v1</td><td>Backend (:8001)</td><td>LiteLLM / OpenAI-compatible API base URL</td></tr>
+    <tr><td>LITELLM_MODEL</td><td>gpt-4o</td><td>Backend (:8001)</td><td>Model identifier for LLM chat</td></tr>
+    <tr><td>LITELLM_API_KEY</td><td>sk-placeholder</td><td>Backend (:8001)</td><td>API key for the LLM service</td></tr>
+    <tr><td>AUTH_USERNAME</td><td>admin</td><td>Backend (:8001)</td><td>Login username</td></tr>
+    <tr><td>AUTH_PASSWORD</td><td>admin</td><td>Backend (:8001)</td><td>Login password</td></tr>
+    <tr><td>VITE_API_BASE</td><td>auto-detected</td><td>Frontend (:5173)</td><td>Override backend API URL (set at build time)</td></tr>
+    <tr><td>KUBECONFIG</td><td>~/.kube/config</td><td>MCP Server</td><td>Path to Kubernetes configuration file</td></tr>
+  </table>
+</div>
+
+<!-- 22. Migration Considerations -->
+<div class="tech-section" id="t-migration">
+  <h2>22. Migration Considerations</h2>
+  <h3>Data Migration</h3>
+  <table>
+    <tr><th>Item</th><th>Approach</th><th>Notes</th></tr>
+    <tr><td>k8s_events.db</td><td>Copy the SQLite file to the new location</td><td>Ensure WAL journal files are also copied (.db-wal, .db-shm)</td></tr>
+    <tr><td>.totp_secret</td><td>Copy to new backend directory</td><td>Or delete to trigger new QR setup (users must re-scan)</td></tr>
+    <tr><td>Environment variables</td><td>Replicate in .env file, K8s ConfigMap/Secret, or CI/CD</td><td>Update LITELLM_BASE_URL if proxy endpoint changes</td></tr>
+  </table>
+  <h3>Code Migration</h3>
+  <table>
+    <tr><th>Component</th><th>Steps</th></tr>
+    <tr><td>Backend</td><td>Copy chat_ui/backend/, pip install -r requirements.txt</td></tr>
+    <tr><td>Frontend</td><td>Copy chat_ui/frontend/, npm install, npm run build</td></tr>
+    <tr><td>Root scripts</td><td>Copy webhook_receiver.py, event_watcher.py, mcp_server.py</td></tr>
+    <tr><td>Docker</td><td>docker build with updated Dockerfile, push to new registry</td></tr>
+    <tr><td>Kubernetes</td><td>Update image URL in k8s-manifests.yaml, kubectl apply</td></tr>
+    <tr><td>Claude Desktop</td><td>Update paths in claude_desktop_config.json</td></tr>
+  </table>
+  <h3>Checklist</h3>
+  <ul>
+    <li>Verify Python 3.11+ and Node.js 18+ available on target</li>
+    <li>Verify kubectl configured with cluster access</li>
+    <li>Verify LiteLLM proxy reachable from new environment</li>
+    <li>Test all API endpoints after migration</li>
+    <li>Verify 2FA works (either copy .totp_secret or reset)</li>
+    <li>Update any hardcoded paths in claude_desktop_config.json</li>
+  </ul>
+</div>
+
+<!-- 23. Troubleshooting -->
+<div class="tech-section" id="t-troubleshoot">
+  <h2>23. Troubleshooting</h2>
+  <table>
+    <tr><th>Issue</th><th>Cause</th><th>Solution</th></tr>
+    <tr><td>Login fails "Invalid credentials"</td><td>Wrong env vars</td><td>Check AUTH_USERNAME and AUTH_PASSWORD (default: admin/admin)</td></tr>
+    <tr><td>"Invalid authenticator code"</td><td>Phone clock out of sync</td><td>Settings &rarr; Date &amp; Time &rarr; Set Automatically</td></tr>
+    <tr><td>QR code appears every login</td><td>.totp_secret missing</td><td>Complete setup by entering the correct TOTP code</td></tr>
+    <tr><td>Dashboard shows no events</td><td>No event collection running</td><td>Start webhook_receiver.py + event_watcher.py</td></tr>
+    <tr><td>Nodes/Pods returns 502</td><td>kubectl not configured</td><td>Ensure kubectl can reach your cluster</td></tr>
+    <tr><td>Chat returns "Connection refused"</td><td>LiteLLM unreachable</td><td>Verify LITELLM_BASE_URL is correct and reachable</td></tr>
+    <tr><td>401 after backend restart</td><td>In-memory tokens cleared</td><td>Re-login (normal behavior)</td></tr>
+    <tr><td>Frontend can't reach backend</td><td>Wrong port/CORS</td><td>Check backend runs on 8001, set VITE_API_BASE if needed</td></tr>
+    <tr><td>system_prompt changes not applied</td><td>Not reloaded</td><td>Call POST /api/reload or restart backend</td></tr>
+    <tr><td>Locked out (lost phone)</td><td>No Authenticator access</td><td>Delete .totp_secret file on server and re-scan QR</td></tr>
+  </table>
+</div>
+
+</div><!-- container -->
+</div><!-- technical view -->
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                                          -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<script>
+// View switching
+function switchView(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(view).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// Slide navigation
+let currentSlide = 0;
+const slides = document.querySelectorAll('#slideDeck .slide');
+const counter = document.getElementById('slideCounter');
+
+function showSlide(n) {
+  slides.forEach(s => s.classList.remove('active'));
+  currentSlide = ((n % slides.length) + slides.length) % slides.length;
+  slides[currentSlide].classList.add('active');
+  counter.textContent = (currentSlide + 1) + ' / ' + slides.length;
+}
+
+function changeSlide(dir) { showSlide(currentSlide + dir); }
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('presentation').classList.contains('active')) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+  }
+});
+
+showSlide(0);
+</script>
+
+</body>
+</html>

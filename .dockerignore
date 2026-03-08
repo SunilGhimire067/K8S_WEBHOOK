@@ -1,0 +1,13 @@
+node_modules
+.venv
+__pycache__
+*.pyc
+.git
+.DS_Store
+k8s_events.db
+.totp_secret
+flutter_app
+figma_template
+docs
+*.log
+nohup.out

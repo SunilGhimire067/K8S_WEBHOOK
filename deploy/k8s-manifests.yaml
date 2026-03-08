@@ -1,0 +1,146 @@
+##############################################################################
+# 1. Namespace
+##############################################################################
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-webhook
+---
+##############################################################################
+# 2. Deployment – webhook receiver
+##############################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-receiver
+  namespace: k8s-webhook
+  labels:
+    app: webhook-receiver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-receiver
+  template:
+    metadata:
+      labels:
+        app: webhook-receiver
+    spec:
+      containers:
+        - name: webhook-receiver
+          image: k8s-webhook-receiver:latest  # replace with your registry image
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+##############################################################################
+# 3. Service
+##############################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-receiver
+  namespace: k8s-webhook
+spec:
+  selector:
+    app: webhook-receiver
+  ports:
+    - port: 80
+      targetPort: 8000
+      protocol: TCP
+---
+##############################################################################
+# 4. ClusterRole + Binding for event-exporter (optional – if using
+#    kube-event-exporter to forward events to the webhook)
+##############################################################################
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: event-reader
+rules:
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: event-reader-binding
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: k8s-webhook
+roleRef:
+  kind: ClusterRole
+  name: event-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+##############################################################################
+# 5. Event Exporter – forwards K8s events to the webhook receiver
+#    (uses opsgenie/kubernetes-event-exporter)
+##############################################################################
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: event-exporter-config
+  namespace: k8s-webhook
+data:
+  config.yaml: |
+    logLevel: info
+    logFormat: json
+    route:
+      routes:
+        - match:
+            - receiver: webhook
+    receivers:
+      - name: webhook
+        webhook:
+          endpoint: "http://webhook-receiver.k8s-webhook.svc.cluster.local/webhook/event"
+          headers:
+            Content-Type: application/json
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-exporter
+  namespace: k8s-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-exporter
+  template:
+    metadata:
+      labels:
+        app: event-exporter
+    spec:
+      containers:
+        - name: event-exporter
+          image: ghcr.io/resmoio/kubernetes-event-exporter:latest
+          args:
+            - -conf=/data/config.yaml
+          volumeMounts:
+            - name: config
+              mountPath: /data
+      volumes:
+        - name: config
+          configMap:
+            name: event-exporter-config

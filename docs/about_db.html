@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinel K8s — Database Documentation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;--bg4:#21262d;--green:#22c55e;--amber:#f59e0b;--red:#f87171;--blue:#58a6ff;--purple:#bc8cff;--text:#e6edf3;--muted:#8b949e;--border:#30363d;--font:'Segoe UI',system-ui,-apple-system,sans-serif}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;padding:0}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── Top Bar ── */
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;height:56px;gap:24px}
+.top-bar .logo{font-size:20px;font-weight:700;color:var(--green)}
+.top-bar .logo .sub{font-size:13px;color:var(--muted);font-weight:400;margin-left:8px}
+.top-bar .nav-btn{padding:8px 18px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:14px;font-weight:500;transition:.2s}
+.top-bar .nav-btn:hover,.top-bar .nav-btn.active{background:var(--green);color:#000;border-color:var(--green)}
+
+/* ── Layout ── */
+.page{padding:80px 32px 48px}
+.container{max-width:1200px;margin:0 auto}
+
+/* ── Sections ── */
+.section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:32px;margin-bottom:24px}
+.section h2{font-size:24px;font-weight:700;color:var(--green);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.section h3{font-size:18px;font-weight:600;color:var(--blue);margin:20px 0 8px}
+.section h4{font-size:15px;font-weight:600;color:var(--amber);margin:16px 0 6px}
+.section p{margin-bottom:10px;font-size:14px}
+.section ul,.section ol{padding-left:24px;margin-bottom:12px}
+.section li{font-size:14px;margin-bottom:4px}
+
+/* ── Tables ── */
+table{width:100%;border-collapse:collapse;margin:16px 0}
+th,td{padding:10px 14px;text-align:left;border:1px solid var(--border);font-size:13px}
+th{background:var(--bg4);color:var(--green);font-weight:600}
+td{background:var(--bg3)}
+code{background:var(--bg4);padding:2px 6px;border-radius:4px;font-size:12px;font-family:'Fira Code','Cascadia Code',monospace}
+pre{background:#0a0e14;padding:16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5;font-family:'Fira Code','Cascadia Code',monospace;color:var(--green);border:1px solid var(--border);margin:12px 0}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-amber{background:rgba(245,158,11,.15);color:var(--amber)}
+.badge-red{background:rgba(248,113,113,.15);color:var(--red)}
+.badge-blue{background:rgba(88,166,255,.15);color:var(--blue)}
+.badge-purple{background:rgba(188,140,255,.15);color:var(--purple)}
+
+/* ── Flow Diagrams ── */
+.flow{display:flex;flex-direction:column;gap:0;align-items:center;margin:24px 0}
+.flow-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center}
+.flow-box{padding:14px 20px;border-radius:8px;border:2px solid var(--border);background:var(--bg3);text-align:center;min-width:140px;position:relative}
+.flow-box.green{border-color:var(--green);color:var(--green)}
+.flow-box.blue{border-color:var(--blue);color:var(--blue)}
+.flow-box.amber{border-color:var(--amber);color:var(--amber)}
+.flow-box.red{border-color:var(--red);color:var(--red)}
+.flow-box.purple{border-color:var(--purple);color:var(--purple)}
+.flow-box .label{font-size:13px;font-weight:700}
+.flow-box .sub{font-size:11px;color:var(--muted);margin-top:4px}
+.flow-arrow{font-size:20px;color:var(--muted);padding:4px 0;display:flex;align-items:center;justify-content:center}
+.flow-arrow.horiz{padding:0 4px}
+.flow-label{font-size:11px;color:var(--amber);font-weight:600;background:var(--bg);padding:2px 8px;border-radius:4px;margin:0 4px}
+
+/* ── Status Lifecycle ── */
+.lifecycle{display:flex;align-items:center;justify-content:center;gap:8px;margin:20px 0;flex-wrap:wrap}
+.lifecycle .state{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:700;text-align:center}
+.lifecycle .arrow{font-size:20px;color:var(--muted)}
+
+/* ── TOC ── */
+.toc{columns:2;column-gap:32px}
+.toc a{display:block;padding:4px 0;font-size:14px;color:var(--blue)}
+
+/* ── Connection Card ── */
+.conn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:16px 0}
+.conn-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px}
+.conn-card h4{color:var(--green);margin-bottom:12px;font-size:15px}
+.conn-card .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid rgba(48,54,61,.5)}
+.conn-card .row:last-child{border-bottom:none}
+.conn-card .key{color:var(--muted)}
+.conn-card .val{color:var(--text);font-family:'Fira Code',monospace;font-size:12px}
+
+/* ── Responsive ── */
+@media(max-width:768px){.toc{columns:1}.flow-row{flex-direction:column}.lifecycle{flex-direction:column}.conn-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ TOP BAR ═══════════════════ -->
+<div class="top-bar">
+    <span class="logo">Sentinel K8s <span class="sub">Database Documentation</span></span>
+    <button class="nav-btn active" onclick="scrollToSection('overview')">Overview</button>
+    <button class="nav-btn" onclick="scrollToSection('connection')">Connection</button>
+    <button class="nav-btn" onclick="scrollToSection('schema')">Schema</button>
+    <button class="nav-btn" onclick="scrollToSection('flows')">Data Flows</button>
+    <button class="nav-btn" onclick="scrollToSection('security')">Security</button>
+    <button class="nav-btn" onclick="scrollToSection('queries')">Queries</button>
+</div>
+
+<div class="page">
+<div class="container">
+
+<!-- ═══════════════════ 1. OVERVIEW ═══════════════════ -->
+<div class="section" id="overview">
+<h2>1. Overview</h2>
+<p>Sentinel K8s uses <strong>MySQL 8</strong> as its persistent data store, running inside a Docker container and exposed on <strong>port 3008</strong>. The <code>sentinel_k8s</code> database contains <strong>4 tables</strong>:</p>
+<ul>
+    <li><code>k8s_events</code> &mdash; Kubernetes events, admission reviews, and alerts</li>
+    <li><code>app_config</code> &mdash; Application configuration (LLM credentials, settings)</li>
+    <li><code>users</code> &mdash; User accounts with bcrypt-hashed passwords and TOTP secrets</li>
+    <li><code>sessions</code> &mdash; Persistent auth sessions with TTL expiration</li>
+</ul>
+
+<h3>Table of Contents</h3>
+<div class="toc">
+    <a href="#connection">2. Connection Details</a>
+    <a href="#schema">3. Table Schemas</a>
+    <a href="#schema-events">3a. k8s_events</a>
+    <a href="#schema-config">3b. app_config</a>
+    <a href="#schema-users">3c. users</a>
+    <a href="#schema-sessions">3d. sessions</a>
+    <a href="#indexes">4. Indexes</a>
+    <a href="#column-details">5. Column Reference</a>
+    <a href="#enums">6. Enum Values</a>
+    <a href="#docker-arch">7. Docker Architecture</a>
+    <a href="#flows">8. Data Flow Diagrams</a>
+    <a href="#insert-flow">8a. INSERT Flow (Webhook Receiver)</a>
+    <a href="#read-flow">8b. SELECT Flow (Backend API)</a>
+    <a href="#update-flow">8c. UPDATE Flow (MCP Server)</a>
+    <a href="#sse-flow">8d. SSE Streaming Flow</a>
+    <a href="#auth-flow">8e. Authentication Flow</a>
+    <a href="#config-flow">8f. Config Store Flow</a>
+    <a href="#lifecycle">9. Event Lifecycle</a>
+    <a href="#security">10. Security Architecture</a>
+    <a href="#db-module">11. database.py Module</a>
+    <a href="#queries">12. SQL Query Reference</a>
+    <a href="#init-sql">13. Initialization Script</a>
+    <a href="#env-vars">14. Environment Variables</a>
+    <a href="#commands">15. Useful Commands</a>
+</div>
+</div>
+
+
+<!-- ═══════════════════ 2. CONNECTION ═══════════════════ -->
+<div class="section" id="connection">
+<h2>2. Connection Details</h2>
+
+<div class="conn-grid">
+    <div class="conn-card">
+        <h4>From Host Machine</h4>
+        <div class="row"><span class="key">Host</span><span class="val">localhost</span></div>
+        <div class="row"><span class="key">Port</span><span class="val">3008</span></div>
+        <div class="row"><span class="key">User</span><span class="val">sentinel</span></div>
+        <div class="row"><span class="key">Password</span><span class="val">sentinel_pass</span></div>
+        <div class="row"><span class="key">Database</span><span class="val">sentinel_k8s</span></div>
+        <div class="row"><span class="key">Root Password</span><span class="val">rootpass</span></div>
+    </div>
+    <div class="conn-card">
+        <h4>From Docker Containers</h4>
+        <div class="row"><span class="key">Host</span><span class="val">mysql</span></div>
+        <div class="row"><span class="key">Port</span><span class="val">3306</span></div>
+        <div class="row"><span class="key">User</span><span class="val">sentinel</span></div>
+        <div class="row"><span class="key">Password</span><span class="val">sentinel_pass</span></div>
+        <div class="row"><span class="key">Database</span><span class="val">sentinel_k8s</span></div>
+        <div class="row"><span class="key">Service Name</span><span class="val">mysql (docker-compose)</span></div>
+    </div>
+    <div class="conn-card">
+        <h4>Python Connection (database.py)</h4>
+        <div class="row"><span class="key">Driver</span><span class="val">mysql-connector-python</span></div>
+        <div class="row"><span class="key">Pool Name</span><span class="val">sentinel_pool</span></div>
+        <div class="row"><span class="key">Pool Size</span><span class="val">5</span></div>
+        <div class="row"><span class="key">Autocommit</span><span class="val">False</span></div>
+        <div class="row"><span class="key">Cursor Type</span><span class="val">dictionary=True</span></div>
+    </div>
+    <div class="conn-card">
+        <h4>Docker Volume</h4>
+        <div class="row"><span class="key">Volume Name</span><span class="val">mysql_data</span></div>
+        <div class="row"><span class="key">Mount Point</span><span class="val">/var/lib/mysql</span></div>
+        <div class="row"><span class="key">Persistence</span><span class="val">Survives restarts</span></div>
+        <div class="row"><span class="key">Init Script</span><span class="val">init.sql</span></div>
+        <div class="row"><span class="key">Healthcheck</span><span class="val">mysqladmin ping</span></div>
+    </div>
+</div>
+
+<h3>Connection Strings</h3>
+<pre># MySQL CLI (from host)
+mysql -h 127.0.0.1 -P 3008 -u sentinel -psentinel_pass sentinel_k8s
+
+# MySQL CLI (inside Docker)
+docker exec -it k8s_webhook-mysql-1 mysql -u sentinel -psentinel_pass sentinel_k8s
+
+# Python (mysql-connector-python)
+import mysql.connector
+conn = mysql.connector.connect(
+    host="localhost", port=3008,
+    user="sentinel", password="sentinel_pass",
+    database="sentinel_k8s"
+)
+
+# JDBC URL
+jdbc:mysql://localhost:3008/sentinel_k8s?user=sentinel&amp;password=sentinel_pass</pre>
+</div>
+
+
+<!-- ═══════════════════ 3. SCHEMA ═══════════════════ -->
+<div class="section" id="schema">
+<h2>3. Table Schemas</h2>
+<p>The <code>sentinel_k8s</code> database contains 4 tables. All tables are created by <code>database.py:init_db()</code> on startup and defined in <code>init.sql</code> for fresh installs.</p>
+
+<!-- 3a. k8s_events -->
+<h3 id="schema-events">3a. <code>k8s_events</code> &mdash; Kubernetes Event Store</h3>
+
+<table>
+<thead>
+<tr><th>#</th><th>Column</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><code>id</code></td><td><code>INT</code></td><td>NO</td><td><span class="badge badge-green">PRI</span></td><td>&mdash;</td><td>AUTO_INCREMENT</td></tr>
+<tr><td>2</td><td><code>event_id</code></td><td><code>VARCHAR(64)</code></td><td>NO</td><td><span class="badge badge-blue">UNI</span></td><td>&mdash;</td><td>SHA256 hash (16 chars)</td></tr>
+<tr><td>3</td><td><code>event_type</code></td><td><code>VARCHAR(32)</code></td><td>NO</td><td>&mdash;</td><td>&mdash;</td><td>k8s-event / admission / alert</td></tr>
+<tr><td>4</td><td><code>kind</code></td><td><code>VARCHAR(64)</code></td><td>YES</td><td>&mdash;</td><td>NULL</td><td>K8s resource kind</td></tr>
+<tr><td>5</td><td><code>name</code></td><td><code>VARCHAR(253)</code></td><td>YES</td><td>&mdash;</td><td>NULL</td><td>Resource name</td></tr>
+<tr><td>6</td><td><code>namespace</code></td><td><code>VARCHAR(253)</code></td><td>YES</td><td>&mdash;</td><td>NULL</td><td>K8s namespace</td></tr>
+<tr><td>7</td><td><code>reason</code></td><td><code>VARCHAR(128)</code></td><td>YES</td><td>&mdash;</td><td>NULL</td><td>Event reason code</td></tr>
+<tr><td>8</td><td><code>message</code></td><td><code>TEXT</code></td><td>YES</td><td>&mdash;</td><td>NULL</td><td>Event description</td></tr>
+<tr><td>9</td><td><code>severity</code></td><td><code>VARCHAR(16)</code></td><td>YES</td><td><span class="badge badge-amber">IDX</span></td><td><code>'info'</code></td><td>info / warning / critical</td></tr>
+<tr><td>10</td><td><code>raw_payload</code></td><td><code>LONGTEXT</code></td><td>NO</td><td>&mdash;</td><td>&mdash;</td><td>Full JSON payload</td></tr>
+<tr><td>11</td><td><code>status</code></td><td><code>VARCHAR(16)</code></td><td>YES</td><td><span class="badge badge-amber">IDX</span></td><td><code>'new'</code></td><td>new / analyzed / resolved</td></tr>
+<tr><td>12</td><td><code>analysis</code></td><td><code>TEXT</code></td><td>YES</td><td>&mdash;</td><td>NULL</td><td>AI-generated analysis</td></tr>
+<tr><td>13</td><td><code>created_at</code></td><td><code>VARCHAR(64)</code></td><td>NO</td><td><span class="badge badge-amber">IDX</span></td><td>&mdash;</td><td>ISO 8601 UTC timestamp</td></tr>
+<tr><td>14</td><td><code>updated_at</code></td><td><code>VARCHAR(64)</code></td><td>NO</td><td>&mdash;</td><td>&mdash;</td><td>ISO 8601 UTC timestamp</td></tr>
+</tbody>
+</table>
+
+<pre>CREATE TABLE IF NOT EXISTS k8s_events (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    event_id    VARCHAR(64) NOT NULL UNIQUE,
+    event_type  VARCHAR(32) NOT NULL,
+    kind        VARCHAR(64),
+    name        VARCHAR(253),
+    namespace   VARCHAR(253),
+    reason      VARCHAR(128),
+    message     TEXT,
+    severity    VARCHAR(16) DEFAULT 'info',
+    raw_payload LONGTEXT NOT NULL,
+    status      VARCHAR(16) DEFAULT 'new',
+    analysis    TEXT,
+    created_at  VARCHAR(64) NOT NULL,
+    updated_at  VARCHAR(64) NOT NULL
+);</pre>
+
+
+<!-- 3b. app_config -->
+<h3 id="schema-config">3b. <code>app_config</code> &mdash; Application Configuration Store</h3>
+<p>Key-value store for application secrets and settings. Accessed via <code>ConfigStore</code> class in <code>database.py</code> with a <strong>60-second in-memory TTL cache</strong>. Values can be updated at runtime without restarting containers.</p>
+
+<table>
+<thead>
+<tr><th>#</th><th>Column</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><code>config_key</code></td><td><code>VARCHAR(128)</code></td><td>NO</td><td><span class="badge badge-green">PRI</span></td><td>&mdash;</td><td>Config identifier</td></tr>
+<tr><td>2</td><td><code>config_value</code></td><td><code>TEXT</code></td><td>NO</td><td>&mdash;</td><td>&mdash;</td><td>Config value (string)</td></tr>
+<tr><td>3</td><td><code>updated_at</code></td><td><code>TIMESTAMP</code></td><td>NO</td><td>&mdash;</td><td><code>CURRENT_TIMESTAMP</code></td><td>Auto-updated on change</td></tr>
+</tbody>
+</table>
+
+<h4>Seeded Config Values</h4>
+<table>
+<tr><th>config_key</th><th>Default Value</th><th>Purpose</th></tr>
+<tr><td><code>litellm_base_url</code></td><td><code>http://host.docker.internal:4000/v1</code></td><td>LiteLLM proxy base URL</td></tr>
+<tr><td><code>litellm_model</code></td><td><code>gpt-4o</code></td><td>AI model identifier</td></tr>
+<tr><td><code>litellm_api_key</code></td><td><code>sk-placeholder</code></td><td>API key for LiteLLM</td></tr>
+</table>
+
+<pre>CREATE TABLE IF NOT EXISTS app_config (
+    config_key   VARCHAR(128) PRIMARY KEY,
+    config_value TEXT NOT NULL,
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);</pre>
+
+
+<!-- 3c. users -->
+<h3 id="schema-users">3c. <code>users</code> &mdash; User Accounts</h3>
+<p>Stores user credentials with <strong>bcrypt-hashed passwords</strong> and TOTP secrets for two-factor authentication. The admin user is seeded on first startup via <code>seed_admin_user()</code>.</p>
+
+<table>
+<thead>
+<tr><th>#</th><th>Column</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><code>id</code></td><td><code>INT</code></td><td>NO</td><td><span class="badge badge-green">PRI</span></td><td>&mdash;</td><td>AUTO_INCREMENT</td></tr>
+<tr><td>2</td><td><code>username</code></td><td><code>VARCHAR(128)</code></td><td>NO</td><td><span class="badge badge-blue">UNI</span></td><td>&mdash;</td><td>Unique login name</td></tr>
+<tr><td>3</td><td><code>password_hash</code></td><td><code>VARCHAR(256)</code></td><td>NO</td><td>&mdash;</td><td>&mdash;</td><td>bcrypt hash ($2b$12$...)</td></tr>
+<tr><td>4</td><td><code>totp_secret</code></td><td><code>VARCHAR(64)</code></td><td>YES</td><td>&mdash;</td><td>NULL</td><td>Base32 TOTP secret (set after first 2FA setup)</td></tr>
+<tr><td>5</td><td><code>created_at</code></td><td><code>TIMESTAMP</code></td><td>NO</td><td>&mdash;</td><td><code>CURRENT_TIMESTAMP</code></td><td>Account creation time</td></tr>
+</tbody>
+</table>
+
+<pre>CREATE TABLE IF NOT EXISTS users (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    username      VARCHAR(128) NOT NULL UNIQUE,
+    password_hash VARCHAR(256) NOT NULL,
+    totp_secret   VARCHAR(64),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);</pre>
+
+
+<!-- 3d. sessions -->
+<h3 id="schema-sessions">3d. <code>sessions</code> &mdash; Auth Sessions</h3>
+<p>Persistent session tokens with automatic TTL expiration. Replaces the previous in-memory token store that was lost on container restart. Expired sessions are cleaned up every 60 seconds by a background task in <code>main.py</code>.</p>
+
+<table>
+<thead>
+<tr><th>#</th><th>Column</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><code>token</code></td><td><code>VARCHAR(128)</code></td><td>NO</td><td><span class="badge badge-green">PRI</span></td><td>&mdash;</td><td>Hex token (64 chars)</td></tr>
+<tr><td>2</td><td><code>username</code></td><td><code>VARCHAR(128)</code></td><td>NO</td><td>&mdash;</td><td>&mdash;</td><td>Owning user</td></tr>
+<tr><td>3</td><td><code>is_temp</code></td><td><code>BOOLEAN</code></td><td>NO</td><td>&mdash;</td><td><code>FALSE</code></td><td>TRUE for pre-TOTP temp tokens</td></tr>
+<tr><td>4</td><td><code>created_at</code></td><td><code>TIMESTAMP</code></td><td>NO</td><td>&mdash;</td><td><code>CURRENT_TIMESTAMP</code></td><td>Session creation time</td></tr>
+<tr><td>5</td><td><code>expires_at</code></td><td><code>TIMESTAMP</code></td><td>NO</td><td><span class="badge badge-amber">IDX</span></td><td>&mdash;</td><td>Expiration time (for cleanup)</td></tr>
+</tbody>
+</table>
+
+<h4>Session Types</h4>
+<table>
+<tr><th>Type</th><th><code>is_temp</code></th><th>TTL</th><th>Created By</th><th>Purpose</th></tr>
+<tr><td><span class="badge badge-amber">Temp</span></td><td>TRUE</td><td>5 minutes</td><td><code>POST /api/auth/login</code></td><td>Intermediate token for TOTP verification step</td></tr>
+<tr><td><span class="badge badge-green">Full</span></td><td>FALSE</td><td>24 hours</td><td><code>POST /api/auth/verify-totp</code></td><td>Authenticated session for API access</td></tr>
+</table>
+
+<pre>CREATE TABLE IF NOT EXISTS sessions (
+    token      VARCHAR(128) PRIMARY KEY,
+    username   VARCHAR(128) NOT NULL,
+    is_temp    BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    INDEX idx_expires (expires_at)
+);</pre>
+
+</div>
+
+
+<!-- ═══════════════════ 4. INDEXES ═══════════════════ -->
+<div class="section" id="indexes">
+<h2>4. Indexes</h2>
+
+<h3><code>k8s_events</code> Indexes</h3>
+<table>
+<thead>
+<tr><th>Index Name</th><th>Column</th><th>Type</th><th>Unique</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code>PRIMARY</code></td><td><code>id</code></td><td>BTREE</td><td><span class="badge badge-green">Yes</span></td><td>Auto-increment primary key</td></tr>
+<tr><td><code>event_id</code></td><td><code>event_id</code></td><td>BTREE</td><td><span class="badge badge-green">Yes</span></td><td>Unique event lookup, INSERT IGNORE dedup</td></tr>
+<tr><td><code>idx_status</code></td><td><code>status</code></td><td>BTREE</td><td>No</td><td>Filter events by status (new/analyzed/resolved)</td></tr>
+<tr><td><code>idx_severity</code></td><td><code>severity</code></td><td>BTREE</td><td>No</td><td>Filter events by severity level</td></tr>
+<tr><td><code>idx_created</code></td><td><code>created_at</code></td><td>BTREE</td><td>No</td><td>Sort by creation time (DESC for recent events)</td></tr>
+</tbody>
+</table>
+
+<h3><code>app_config</code> Indexes</h3>
+<table>
+<thead>
+<tr><th>Index Name</th><th>Column</th><th>Type</th><th>Unique</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code>PRIMARY</code></td><td><code>config_key</code></td><td>BTREE</td><td><span class="badge badge-green">Yes</span></td><td>Key-based lookup for config values</td></tr>
+</tbody>
+</table>
+
+<h3><code>users</code> Indexes</h3>
+<table>
+<thead>
+<tr><th>Index Name</th><th>Column</th><th>Type</th><th>Unique</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code>PRIMARY</code></td><td><code>id</code></td><td>BTREE</td><td><span class="badge badge-green">Yes</span></td><td>Auto-increment primary key</td></tr>
+<tr><td><code>username</code></td><td><code>username</code></td><td>BTREE</td><td><span class="badge badge-green">Yes</span></td><td>Unique user lookup during login</td></tr>
+</tbody>
+</table>
+
+<h3><code>sessions</code> Indexes</h3>
+<table>
+<thead>
+<tr><th>Index Name</th><th>Column</th><th>Type</th><th>Unique</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code>PRIMARY</code></td><td><code>token</code></td><td>BTREE</td><td><span class="badge badge-green">Yes</span></td><td>Token-based session lookup</td></tr>
+<tr><td><code>idx_expires</code></td><td><code>expires_at</code></td><td>BTREE</td><td>No</td><td>Efficient cleanup of expired sessions</td></tr>
+</tbody>
+</table>
+</div>
+
+
+<!-- ═══════════════════ 5. COLUMN DETAILS ═══════════════════ -->
+<div class="section" id="column-details">
+<h2>5. Column Reference</h2>
+
+<h3><code>event_id</code> &mdash; Generation</h3>
+<p>Generated in <code>webhook_receiver.py</code> using SHA256 hash, truncated to 16 hex characters:</p>
+<pre>event_id = hashlib.sha256(
+    f"{kind}:{namespace}:{name}:{reason}:{message}:{now}".encode()
+).hexdigest()[:16]</pre>
+<p>The timestamp in the hash ensures uniqueness even for identical events at different times.</p>
+
+<h3><code>raw_payload</code> &mdash; JSON Storage</h3>
+<p>Stores the full incoming JSON payload as a string via <code>json.dumps(payload)</code>. When read back, it is parsed with <code>json.loads()</code> for display. Uses <code>LONGTEXT</code> to accommodate large admission review payloads.</p>
+
+<h3><code>created_at</code> / <code>updated_at</code> &mdash; Timestamps</h3>
+<p>Stored as ISO 8601 strings in UTC: <code>2026-03-03T10:42:40.292441+00:00</code>. Generated via <code>datetime.now(timezone.utc).isoformat()</code>.</p>
+</div>
+
+
+<!-- ═══════════════════ 6. ENUM VALUES ═══════════════════ -->
+<div class="section" id="enums">
+<h2>6. Enum Values</h2>
+
+<h3><code>event_type</code> (3 values)</h3>
+<table>
+<tr><th>Value</th><th>Source</th><th>Endpoint</th></tr>
+<tr><td><code>k8s-event</code></td><td>Kubernetes Event objects</td><td><code>POST /webhook/event</code></td></tr>
+<tr><td><code>admission</code></td><td>Admission webhook reviews</td><td><code>POST /webhook/admission</code></td></tr>
+<tr><td><code>alert</code></td><td>Prometheus / external alerts</td><td><code>POST /webhook/alert</code></td></tr>
+</table>
+
+<h3><code>severity</code> (3 levels)</h3>
+<table>
+<tr><th>Value</th><th>Color</th><th>Triggered By</th></tr>
+<tr><td><span class="badge badge-blue">info</span></td><td>#58A6FF</td><td>Normal events, default for unknown reasons</td></tr>
+<tr><td><span class="badge badge-amber">warning</span></td><td>#F59E0B</td><td>BackOff, Unhealthy, FailedMount, Evicted, DeadlineExceeded, FailedAttachVolume, FailedDetachVolume</td></tr>
+<tr><td><span class="badge badge-red">critical</span></td><td>#F87171</td><td>CrashLoopBackOff, OOMKilled, FailedScheduling, FailedCreate, ImagePullBackOff, ErrImagePull, NodeNotReady</td></tr>
+</table>
+
+<h3><code>status</code> (3 states)</h3>
+<table>
+<tr><th>Value</th><th>Set By</th><th>SQL Operation</th></tr>
+<tr><td><span class="badge badge-green">new</span></td><td>webhook_receiver.py at INSERT</td><td><code>INSERT IGNORE ... 'new'</code></td></tr>
+<tr><td><span class="badge badge-blue">analyzed</span></td><td>mcp_server.py <code>analyze_event()</code></td><td><code>UPDATE ... SET status = 'analyzed'</code></td></tr>
+<tr><td><span class="badge badge-purple">resolved</span></td><td>mcp_server.py <code>mark_resolved()</code></td><td><code>UPDATE ... SET status = 'resolved'</code></td></tr>
+</table>
+</div>
+
+
+<!-- ═══════════════════ 7. DOCKER ARCHITECTURE ═══════════════════ -->
+<div class="section" id="docker-arch">
+<h2>7. Docker Architecture</h2>
+<p>All services run inside Docker via <code>docker-compose.yml</code>. The MySQL container must be healthy before webhook and backend start.</p>
+
+<div class="flow">
+    <div class="flow-row">
+        <div class="flow-box green">
+            <div class="label">K8s Cluster</div>
+            <div class="sub">Events / Admission / Alerts</div>
+        </div>
+        <div class="flow-arrow horiz">&rarr;</div>
+        <div class="flow-box amber">
+            <div class="label">Webhook Receiver</div>
+            <div class="sub">:8000 (FastAPI)</div>
+        </div>
+        <div class="flow-arrow horiz">&rarr;</div>
+        <div class="flow-box red" style="min-width:200px">
+            <div class="label">MySQL 8</div>
+            <div class="sub">:3008 &rarr; :3306 (internal)</div>
+            <div class="sub">sentinel_k8s.k8s_events</div>
+        </div>
+        <div class="flow-arrow horiz">&larr;</div>
+        <div class="flow-box blue">
+            <div class="label">Backend API</div>
+            <div class="sub">:8001 (FastAPI)</div>
+        </div>
+    </div>
+    <div class="flow-arrow">&uarr;</div>
+    <div class="flow-row">
+        <div class="flow-box purple">
+            <div class="label">MCP Server</div>
+            <div class="sub">Claude Desktop (stdio)</div>
+        </div>
+        <div class="flow-arrow horiz">&rarr; reads/updates &rarr;</div>
+        <div class="flow-box red">
+            <div class="label">MySQL 8</div>
+            <div class="sub">k8s_events</div>
+        </div>
+        <div class="flow-arrow horiz">&larr; proxies /api/ &larr;</div>
+        <div class="flow-box green">
+            <div class="label">Frontend</div>
+            <div class="sub">:5173 (nginx)</div>
+        </div>
+    </div>
+</div>
+
+<h3>Service Dependencies</h3>
+<pre>mysql (MySQL 8)              &larr; healthcheck: mysqladmin ping
+  &boxur;&boxh; webhook (port 8000)       &larr; depends_on: mysql (healthy)
+  &boxur;&boxh; backend (port 8001)       &larr; depends_on: mysql (healthy)
+      &boxur;&boxh; frontend (port 5173)  &larr; depends_on: backend</pre>
+
+<h3>Port Mapping</h3>
+<table>
+<tr><th>Service</th><th>Host Port</th><th>Container Port</th><th>Protocol</th></tr>
+<tr><td>MySQL</td><td><strong>3008</strong></td><td>3306</td><td>TCP (MySQL)</td></tr>
+<tr><td>Webhook</td><td>8000</td><td>8000</td><td>HTTP</td></tr>
+<tr><td>Backend</td><td>8001</td><td>8001</td><td>HTTP</td></tr>
+<tr><td>Frontend</td><td>5173</td><td>80</td><td>HTTP (nginx)</td></tr>
+</table>
+
+<h3>Volume Mounts</h3>
+<table>
+<tr><th>Service</th><th>Host Path</th><th>Container Path</th><th>Mode</th><th>Purpose</th></tr>
+<tr><td>Backend</td><td><code>${HOME}/.kube/config</code></td><td><code>/root/.kube/config</code></td><td>Read-only</td><td>kubectl access for cluster API (resources, JVM, network endpoints)</td></tr>
+</table>
+<p>The backend container includes <code>kubectl</code> installed in its Dockerfile. The kubeconfig volume mount enables cluster API endpoints (<code>/resources</code>, <code>/jvm</code>, <code>/network</code>) that use kubectl subprocess calls instead of database queries.</p>
+</div>
+
+
+<!-- ═══════════════════ 8. DATA FLOW DIAGRAMS ═══════════════════ -->
+<div class="section" id="flows">
+<h2>8. Data Flow Diagrams</h2>
+
+
+<!-- 8a. INSERT -->
+<h3 id="insert-flow">8a. INSERT Flow &mdash; Webhook Receiver</h3>
+<p>Three endpoints insert data. All go through <code>store_event()</code> in <code>webhook_receiver.py</code>.</p>
+
+<div class="flow">
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">K8s Event</div><div class="sub">POST /webhook/event</div></div>
+        <div class="flow-box amber"><div class="label">Admission Review</div><div class="sub">POST /webhook/admission</div></div>
+        <div class="flow-box red"><div class="label">Alert</div><div class="sub">POST /webhook/alert</div></div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">JSON payload</span></div>
+    <div class="flow-row">
+        <div class="flow-box blue" style="min-width:300px">
+            <div class="label">store_event(payload, event_type)</div>
+            <div class="sub">webhook_receiver.py</div>
+        </div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">Extract metadata</span></div>
+    <div class="flow-row">
+        <div class="flow-box" style="min-width:500px;text-align:left;border-color:var(--muted)">
+            <div class="label" style="color:var(--text);text-align:center">Field Extraction Pipeline</div>
+            <div class="sub" style="text-align:left;margin-top:8px">
+                1. Extract <code>involvedObject</code> or <code>metadata</code> &rarr; <strong>kind, name, namespace</strong><br>
+                2. Get <code>reason</code> and <code>message</code> from payload<br>
+                3. Classify severity via <code>SEVERITY_MAP</code> lookup (15 reason codes)<br>
+                4. Generate <code>event_id</code> = SHA256(kind:ns:name:reason:msg:time)[:16]<br>
+                5. Set <code>status = 'new'</code>, timestamps = <code>datetime.now(UTC).isoformat()</code>
+            </div>
+        </div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">INSERT IGNORE</span></div>
+    <div class="flow-row">
+        <div class="flow-box red" style="min-width:500px">
+            <div class="label">MySQL &mdash; INSERT IGNORE INTO k8s_events</div>
+            <div class="sub">12 columns + status='new' | Dedup via UNIQUE event_id</div>
+        </div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">conn.commit()</span></div>
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">Return event_id, severity, kind, name, namespace</div></div>
+    </div>
+</div>
+
+<h4>INSERT SQL</h4>
+<pre>INSERT IGNORE INTO k8s_events
+    (event_id, event_type, kind, name, namespace,
+     reason, message, severity, raw_payload, status,
+     created_at, updated_at)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'new', %s, %s)</pre>
+<p><code>INSERT IGNORE</code> silently skips if <code>event_id</code> (UNIQUE) already exists, preventing duplicates.</p>
+
+
+<!-- 8b. SELECT -->
+<h3 id="read-flow">8b. SELECT Flow &mdash; Backend API + MCP Server</h3>
+<p>Both the Backend API (<code>events_api.py</code>) and MCP Server (<code>mcp_server.py</code>) read from the same table.</p>
+
+<div class="flow">
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">Frontend (React)</div><div class="sub">Dashboard / Event Explorer</div></div>
+        <div class="flow-arrow horiz">&rarr;</div>
+        <div class="flow-box blue"><div class="label">nginx :5173</div><div class="sub">Proxy /api/ &rarr; backend</div></div>
+        <div class="flow-arrow horiz">&rarr;</div>
+        <div class="flow-box blue"><div class="label">Backend API :8001</div><div class="sub">events_api.py</div></div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">GET /api/events, /stats, /{id}</span></div>
+    <div class="flow-row">
+        <div class="flow-box red" style="min-width:500px">
+            <div class="label">MySQL &mdash; SELECT ... FROM k8s_events</div>
+            <div class="sub">Filtered by severity, namespace, search | Paginated with LIMIT/OFFSET</div>
+        </div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">Dictionary cursor rows</span></div>
+    <div class="flow-row">
+        <div class="flow-box green" style="min-width:400px">
+            <div class="label">JSON Response</div>
+            <div class="sub">{ events: [...], total: N, limit: 50, offset: 0 }</div>
+        </div>
+    </div>
+</div>
+
+<h4>Backend API Endpoints that SELECT</h4>
+<table>
+<tr><th>Endpoint</th><th>Query Type</th><th>Filters</th><th>Notes</th></tr>
+<tr><td><code>GET /api/events</code></td><td>SELECT + COUNT</td><td>severity, namespace, search (LIKE)</td><td>Paginated with LIMIT/OFFSET</td></tr>
+<tr><td><code>GET /api/events/stats</code></td><td>GROUP BY</td><td>None</td><td>Counts by severity and status</td></tr>
+<tr><td><code>GET /api/events/stream</code></td><td>Polling SELECT</td><td><code>WHERE id &gt; last_id</code></td><td>SSE, polls every 2 seconds</td></tr>
+<tr><td><code>GET /api/events/{id}</code></td><td>SELECT *</td><td><code>WHERE event_id = %s</code></td><td>Includes parsed raw_payload</td></tr>
+</table>
+
+<h4>Cluster API Endpoints (kubectl-based, no DB)</h4>
+<p>These endpoints use <code>kubectl</code> subprocess calls instead of SQL. They are served by <code>cluster_api.py</code>:</p>
+<table>
+<tr><th>Endpoint</th><th>Data Source</th><th>Purpose</th></tr>
+<tr><td><code>GET /api/cluster/nodes</code></td><td>kubectl get nodes -o json</td><td>Node status, roles, version</td></tr>
+<tr><td><code>GET /api/cluster/namespaces</code></td><td>kubectl get namespaces -o json</td><td>Namespace list</td></tr>
+<tr><td><code>GET /api/cluster/pods</code></td><td>kubectl get pods -o json</td><td>Pod list per namespace</td></tr>
+<tr><td><code>GET /api/cluster/logs</code></td><td>kubectl logs</td><td>Pod log output</td></tr>
+<tr><td><code>GET /api/cluster/resources</code></td><td>kubectl top pods + get pods -o json</td><td>CPU/memory usage vs requests/limits</td></tr>
+<tr><td><code>GET /api/cluster/resources/trace</code></td><td>kubectl describe + top + logs + events &rarr; LLM</td><td>AI-powered root cause analysis</td></tr>
+<tr><td><code>GET /api/cluster/jvm</code></td><td>kubectl get pods + exec jcmd</td><td>JVM expected vs actual flags</td></tr>
+<tr><td><code>GET /api/cluster/network</code></td><td>kubectl get svc + endpoints + netpol + exec curl</td><td>Services, endpoints, policies, cross-namespace latency (source_pod, source_ns params)</td></tr>
+</table>
+
+<h4>MCP Server Tools that SELECT</h4>
+<table>
+<tr><th>Tool</th><th>Query Type</th><th>Filters</th><th>Notes</th></tr>
+<tr><td><code>list_events()</code></td><td>SELECT (11 cols)</td><td>status, severity, namespace, limit</td><td>Returns formatted text + JSON</td></tr>
+<tr><td><code>get_event()</code></td><td>SELECT *</td><td><code>WHERE event_id = %s</code></td><td>Parses raw_payload for display</td></tr>
+<tr><td><code>get_event_summary()</code></td><td>3x SELECT</td><td>None</td><td>GROUP BY severity, status + latest 5</td></tr>
+</table>
+
+<h4>MCP Server Tools (kubectl-based, no DB)</h4>
+<table>
+<tr><th>Tool</th><th>Data Source</th><th>Parameters</th><th>Notes</th></tr>
+<tr><td><code>trace_resource_usage()</code></td><td>kubectl describe + top + events + logs</td><td>pod, namespace</td><td>Returns markdown root cause report</td></tr>
+<tr><td><code>get_jvm_details()</code></td><td>kubectl get pods + exec jcmd</td><td>namespace</td><td>Compares expected vs actual JVM flags</td></tr>
+<tr><td><code>get_network_status()</code></td><td>kubectl get svc + endpoints + netpol + exec curl</td><td>namespace, test_latency</td><td>Service map + cross-namespace latency (self-service skip)</td></tr>
+</table>
+
+
+<!-- 8c. UPDATE -->
+<h3 id="update-flow">8c. UPDATE Flow &mdash; MCP Server</h3>
+<p>Only the MCP Server modifies existing rows. Two tools perform UPDATEs:</p>
+
+<div class="flow">
+    <div class="flow-row">
+        <div class="flow-box purple"><div class="label">Claude Desktop</div><div class="sub">AI Analysis Request</div></div>
+        <div class="flow-arrow horiz">&rarr;</div>
+        <div class="flow-box blue"><div class="label">MCP Server</div><div class="sub">analyze_event(event_id)</div></div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">SELECT * WHERE event_id = %s</span></div>
+    <div class="flow-row">
+        <div class="flow-box" style="min-width:500px;text-align:left;border-color:var(--muted)">
+            <div class="label" style="color:var(--text);text-align:center">Analysis Generation</div>
+            <div class="sub" style="text-align:left;margin-top:8px">
+                1. Match <code>reason</code> against ANALYSIS_TEMPLATES (5 templates)<br>
+                2. CrashLoopBackOff, OOMKilled, ImagePullBackOff, FailedScheduling, Unhealthy<br>
+                3. Fallback to DEFAULT_ANALYSIS for unknown reasons<br>
+                4. Format with namespace, name, kind placeholders<br>
+                5. Build full_analysis markdown with diagnostics + commands
+            </div>
+        </div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">UPDATE</span></div>
+    <div class="flow-row">
+        <div class="flow-box red" style="min-width:500px">
+            <div class="label">MySQL &mdash; UPDATE k8s_events</div>
+            <div class="sub">SET status = 'analyzed', analysis = %s, updated_at = %s</div>
+        </div>
+    </div>
+</div>
+
+<h4>analyze_event() UPDATE SQL</h4>
+<pre>UPDATE k8s_events
+SET status = 'analyzed', analysis = %s, updated_at = %s
+WHERE event_id = %s</pre>
+
+<h4>mark_resolved() UPDATE SQL</h4>
+<pre>UPDATE k8s_events
+SET status = 'resolved',
+    analysis = CONCAT(COALESCE(analysis, ''), %s),
+    updated_at = %s
+WHERE event_id = %s</pre>
+<p><code>CONCAT(COALESCE(analysis, ''), %s)</code> appends the resolution note to existing analysis text rather than replacing it.</p>
+
+<h4>Columns Modified by UPDATE</h4>
+<table>
+<tr><th>Column</th><th>analyze_event()</th><th>mark_resolved()</th></tr>
+<tr><td><code>status</code></td><td>Set to <code>'analyzed'</code></td><td>Set to <code>'resolved'</code></td></tr>
+<tr><td><code>analysis</code></td><td>Replaced with full analysis</td><td>Appended with resolution note</td></tr>
+<tr><td><code>updated_at</code></td><td>Set to current UTC time</td><td>Set to current UTC time</td></tr>
+</table>
+
+
+<!-- 8d. SSE -->
+<h3 id="sse-flow">8d. SSE Streaming Flow</h3>
+<p>The <code>/api/events/stream</code> endpoint pushes new events to the frontend in real-time using Server-Sent Events.</p>
+
+<div class="flow">
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">Frontend</div><div class="sub">EventSource('/api/events/stream')</div></div>
+        <div class="flow-arrow horiz">&rarr;</div>
+        <div class="flow-box blue"><div class="label">Backend API</div><div class="sub">event_stream()</div></div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">Initialize last_id = MAX(id)</span></div>
+    <div class="flow-row">
+        <div class="flow-box" style="min-width:500px;border-color:var(--amber)">
+            <div class="label" style="color:var(--amber)">Polling Loop (every 2 seconds)</div>
+            <div class="sub" style="text-align:left;margin-top:8px">
+                1. <code>SELECT ... FROM k8s_events WHERE id &gt; last_id ORDER BY id ASC</code><br>
+                2. For each new row: yield <code>data: {json}\n\n</code><br>
+                3. Update <code>last_id</code> to latest row's <code>id</code><br>
+                4. Sleep 2 seconds, repeat
+            </div>
+        </div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">SSE: data: {...}</span></div>
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">Frontend Dashboard</div><div class="sub">Live event updates</div></div>
+    </div>
+</div>
+
+
+<!-- 8e. Authentication -->
+<h3 id="auth-flow">8e. Authentication Flow</h3>
+<p>Two-step login: password verification (bcrypt) followed by TOTP verification. Sessions are persisted in the <code>sessions</code> table with TTL expiration.</p>
+
+<div class="flow">
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">Frontend</div><div class="sub">Login Form</div></div>
+        <div class="flow-arrow horiz">&rarr; <span class="flow-label">POST /api/auth/login</span></div>
+        <div class="flow-box blue"><div class="label">auth.py</div><div class="sub">login()</div></div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">SELECT * FROM users WHERE username = %s</span></div>
+    <div class="flow-row">
+        <div class="flow-box" style="min-width:500px;text-align:left;border-color:var(--muted)">
+            <div class="label" style="color:var(--text);text-align:center">Step 1: Password Verification</div>
+            <div class="sub" style="text-align:left;margin-top:8px">
+                1. Fetch user from <code>users</code> table by username<br>
+                2. Verify password with <code>bcrypt.checkpw()</code> against <code>password_hash</code><br>
+                3. Check if <code>totp_secret</code> is set (first-time setup vs returning user)<br>
+                4. Generate temp token &rarr; <code>INSERT INTO sessions</code> (is_temp=TRUE, TTL=5min)<br>
+                5. If first-time: generate TOTP secret, QR code, return in response
+            </div>
+        </div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">Return temp_token + QR (if setup)</span></div>
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">Frontend</div><div class="sub">TOTP Input</div></div>
+        <div class="flow-arrow horiz">&rarr; <span class="flow-label">POST /api/auth/verify-totp</span></div>
+        <div class="flow-box blue"><div class="label">auth.py</div><div class="sub">verify_totp()</div></div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">Validate temp session + TOTP code</span></div>
+    <div class="flow-row">
+        <div class="flow-box" style="min-width:500px;text-align:left;border-color:var(--muted)">
+            <div class="label" style="color:var(--text);text-align:center">Step 2: TOTP Verification</div>
+            <div class="sub" style="text-align:left;margin-top:8px">
+                1. <code>SELECT * FROM sessions WHERE token = %s AND is_temp = TRUE AND expires_at &gt; NOW()</code><br>
+                2. Get user's TOTP secret from <code>users</code> table (or pending secret for first-time)<br>
+                3. Verify code with <code>pyotp.TOTP.verify(code, valid_window=1)</code><br>
+                4. First-time setup: <code>UPDATE users SET totp_secret = %s</code><br>
+                5. Delete temp session &rarr; <code>DELETE FROM sessions WHERE token = %s</code><br>
+                6. Create full session &rarr; <code>INSERT INTO sessions</code> (is_temp=FALSE, TTL=24h)
+            </div>
+        </div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">Return auth token (24h)</span></div>
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">Frontend</div><div class="sub">Stores token in localStorage</div></div>
+        <div class="flow-arrow horiz">&rarr; <span class="flow-label">Authorization: Bearer {token}</span></div>
+        <div class="flow-box blue"><div class="label">require_auth()</div><div class="sub">Every protected endpoint</div></div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">SELECT * FROM sessions WHERE token = %s AND is_temp = FALSE AND expires_at &gt; NOW()</span></div>
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">Access Granted</div><div class="sub">Request proceeds to handler</div></div>
+    </div>
+</div>
+
+<h4>Session Cleanup</h4>
+<p>A background task in <code>main.py</code> runs <code>DELETE FROM sessions WHERE expires_at &lt; NOW()</code> every <strong>60 seconds</strong>, removing expired temp tokens and full sessions.</p>
+
+
+<!-- 8f. Config Store -->
+<h3 id="config-flow">8f. Config Store Flow</h3>
+<p>LLM credentials are stored in <code>app_config</code> and accessed via the <code>ConfigStore</code> class with a 60-second TTL cache.</p>
+
+<div class="flow">
+    <div class="flow-row">
+        <div class="flow-box blue"><div class="label">llm_client.py</div><div class="sub">get_openai_client()</div></div>
+        <div class="flow-arrow horiz">&rarr;</div>
+        <div class="flow-box blue"><div class="label">config.py</div><div class="sub">get_litellm_base_url()</div></div>
+        <div class="flow-arrow horiz">&rarr;</div>
+        <div class="flow-box amber"><div class="label">ConfigStore</div><div class="sub">database.py</div></div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">Check in-memory cache (60s TTL)</span></div>
+    <div class="flow-row">
+        <div class="flow-box" style="min-width:500px;border-color:var(--amber)">
+            <div class="label" style="color:var(--amber)">Cache Logic</div>
+            <div class="sub" style="text-align:left;margin-top:8px">
+                <strong>Cache HIT</strong> (within 60s): Return cached value immediately &mdash; no DB query<br>
+                <strong>Cache MISS</strong>: <code>SELECT config_value FROM app_config WHERE config_key = %s</code><br>
+                &rarr; Cache result for 60 seconds, return value<br>
+                <strong>Not found</strong>: Return default value (e.g., <code>"gpt-4o"</code>)
+            </div>
+        </div>
+    </div>
+    <div class="flow-arrow">&darr; <span class="flow-label">Return config value</span></div>
+    <div class="flow-row">
+        <div class="flow-box green"><div class="label">OpenAI Client Created</div><div class="sub">With fresh credentials from DB</div></div>
+    </div>
+</div>
+
+<h4>Updating Config at Runtime</h4>
+<pre># Update LLM model without restarting:
+UPDATE app_config SET config_value = 'gpt-4-turbo' WHERE config_key = 'litellm_model';
+
+# Update API key:
+UPDATE app_config SET config_value = 'sk-live-xxx' WHERE config_key = 'litellm_api_key';
+
+# Changes take effect within 60 seconds (cache TTL)</pre>
+</div>
+
+
+<!-- ═══════════════════ 9. EVENT LIFECYCLE (unchanged) ═══════════════════ -->
+<div class="section" id="lifecycle">
+<h2>9. Event Status Lifecycle</h2>
+<p>Each event progresses through three states. Only forward transitions occur.</p>
+
+<div class="lifecycle">
+    <div class="state" style="background:rgba(34,197,94,.15);color:var(--green);border:2px solid var(--green)">new</div>
+    <div class="arrow">&rarr;</div>
+    <div class="state" style="background:rgba(88,166,255,.15);color:var(--blue);border:2px solid var(--blue)">analyzed</div>
+    <div class="arrow">&rarr;</div>
+    <div class="state" style="background:rgba(188,140,255,.15);color:var(--purple);border:2px solid var(--purple)">resolved</div>
+</div>
+
+<table>
+<tr><th>Transition</th><th>Triggered By</th><th>Service</th><th>What Happens</th></tr>
+<tr>
+    <td><span class="badge badge-green">new</span></td>
+    <td>Incoming webhook payload</td>
+    <td>webhook_receiver.py</td>
+    <td><code>INSERT IGNORE</code> with <code>status='new'</code>. Severity classified from reason code.</td>
+</tr>
+<tr>
+    <td><span class="badge badge-green">new</span> &rarr; <span class="badge badge-blue">analyzed</span></td>
+    <td>Claude Desktop calls <code>analyze_event(id)</code></td>
+    <td>mcp_server.py</td>
+    <td><code>UPDATE</code> sets <code>status='analyzed'</code>, populates <code>analysis</code> column with diagnostic markdown.</td>
+</tr>
+<tr>
+    <td><span class="badge badge-blue">analyzed</span> &rarr; <span class="badge badge-purple">resolved</span></td>
+    <td>Claude Desktop calls <code>mark_resolved(id, note)</code></td>
+    <td>mcp_server.py</td>
+    <td><code>UPDATE</code> sets <code>status='resolved'</code>, appends resolution note to <code>analysis</code> via <code>CONCAT()</code>.</td>
+</tr>
+<tr>
+    <td><span class="badge badge-green">new</span> &rarr; <span class="badge badge-purple">resolved</span></td>
+    <td>Claude Desktop calls <code>mark_resolved(id)</code> directly</td>
+    <td>mcp_server.py</td>
+    <td>Direct skip from new to resolved is allowed.</td>
+</tr>
+</table>
+</div>
+
+
+<!-- ═══════════════════ 10. SECURITY ARCHITECTURE ═══════════════════ -->
+<div class="section" id="security">
+<h2>10. Security Architecture</h2>
+<p>All application secrets are stored in MySQL — nothing sensitive lives in environment variables, flat files, or application memory.</p>
+
+<h3>Security Migration Summary</h3>
+<table>
+<tr><th>Secret</th><th>Before (Insecure)</th><th>After (Secure)</th></tr>
+<tr>
+    <td>User passwords</td>
+    <td><span class="badge badge-red">Plaintext</span> in <code>.env</code> + env vars, compared with <code>==</code></td>
+    <td><span class="badge badge-green">bcrypt hash</span> in <code>users.password_hash</code>, verified with <code>bcrypt.checkpw()</code></td>
+</tr>
+<tr>
+    <td>TOTP secrets</td>
+    <td><span class="badge badge-red">Flat file</span> <code>.totp_secret</code> (lost on container rebuild)</td>
+    <td><span class="badge badge-green">Database</span> <code>users.totp_secret</code> column (persistent)</td>
+</tr>
+<tr>
+    <td>Session tokens</td>
+    <td><span class="badge badge-red">In-memory</span> Python <code>set()</code> (lost on restart, no expiration)</td>
+    <td><span class="badge badge-green">Database</span> <code>sessions</code> table with <strong>TTL expiration</strong></td>
+</tr>
+<tr>
+    <td>LLM credentials</td>
+    <td><span class="badge badge-red">Env vars</span> in <code>.env</code>, <code>docker-compose.yml</code></td>
+    <td><span class="badge badge-green">Database</span> <code>app_config</code> table (changeable at runtime)</td>
+</tr>
+<tr>
+    <td>Temp tokens</td>
+    <td><span class="badge badge-red">In-memory</span> Python <code>dict()</code> (no TTL)</td>
+    <td><span class="badge badge-green">Database</span> <code>sessions</code> table with <strong>5-min TTL</strong></td>
+</tr>
+</table>
+
+<h3>Password Hashing</h3>
+<pre># Hashing (on seed / password change):
+hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+# Stored: "$2b$12$JCVJLVEq2B96UrjhM4DhNe..." (60 chars)
+
+# Verification (on login):
+bcrypt.checkpw(req.password.encode(), user["password_hash"].encode())
+# Returns True/False — constant-time comparison, resistant to timing attacks</pre>
+
+<h3>Session Lifecycle</h3>
+<div class="lifecycle">
+    <div class="state" style="background:rgba(245,158,11,.15);color:var(--amber);border:2px solid var(--amber)">Login &rarr; Temp Token<br><span style="font-size:11px;font-weight:400">5-min TTL</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="state" style="background:rgba(88,166,255,.15);color:var(--blue);border:2px solid var(--blue)">TOTP Verify<br><span style="font-size:11px;font-weight:400">Delete temp</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="state" style="background:rgba(34,197,94,.15);color:var(--green);border:2px solid var(--green)">Full Session<br><span style="font-size:11px;font-weight:400">24-hour TTL</span></div>
+    <div class="arrow">&rarr;</div>
+    <div class="state" style="background:rgba(248,113,113,.15);color:var(--red);border:2px solid var(--red)">Expired<br><span style="font-size:11px;font-weight:400">Auto-cleaned</span></div>
+</div>
+
+<h3>What Remains in .env</h3>
+<p>Only MySQL connection credentials remain in environment variables — these are required before the database is reachable and cannot be stored in it:</p>
+<table>
+<tr><th>Variable</th><th>Purpose</th><th>Why Not in DB</th></tr>
+<tr><td><code>MYSQL_ROOT_PASSWORD</code></td><td>MySQL root access</td><td>Needed to create the database itself</td></tr>
+<tr><td><code>MYSQL_USER</code> / <code>MYSQL_PASSWORD</code></td><td>Application DB user</td><td>Needed to connect to DB</td></tr>
+<tr><td><code>MYSQL_DATABASE</code></td><td>Database name</td><td>Needed to connect to DB</td></tr>
+<tr><td><code>SEED_ADMIN_PASSWORD</code></td><td>Initial admin password</td><td>Only used on first run, then ignored</td></tr>
+</table>
+</div>
+
+
+<!-- ═══════════════════ 11. DATABASE MODULE ═══════════════════ -->
+<div class="section" id="db-module">
+<h2>11. database.py &mdash; Shared Module</h2>
+<p>All services import from <code>database.py</code> at the project root. It provides connection pooling, table initialization, authentication helpers, config store, and session management.</p>
+
+<h3>Core Functions</h3>
+<table>
+<tr><th>Function</th><th>Returns</th><th>Used By</th><th>Purpose</th></tr>
+<tr><td><code>get_db()</code></td><td><code>MySQLConnection</code></td><td>All services</td><td>Get a connection from the pool (size=5)</td></tr>
+<tr><td><code>get_cursor(conn)</code></td><td><code>MySQLCursor</code></td><td>All services</td><td>Dictionary cursor (<code>cursor(dictionary=True)</code>)</td></tr>
+<tr><td><code>wait_for_db(timeout, interval)</code></td><td><code>None</code></td><td>webhook, backend</td><td>Block until MySQL is reachable (retry loop)</td></tr>
+<tr><td><code>init_db()</code></td><td><code>None</code></td><td>webhook, backend</td><td>CREATE all 4 tables + indexes if not exist</td></tr>
+</table>
+
+<h3>ConfigStore Class</h3>
+<table>
+<tr><th>Method</th><th>Returns</th><th>SQL</th><th>Purpose</th></tr>
+<tr><td><code>get(key, default)</code></td><td><code>str</code></td><td><code>SELECT config_value FROM app_config WHERE config_key = %s</code></td><td>Read with 60s TTL cache</td></tr>
+<tr><td><code>set(key, value)</code></td><td><code>None</code></td><td><code>INSERT ... ON DUPLICATE KEY UPDATE</code></td><td>Write + update cache</td></tr>
+</table>
+
+<h3>User Helpers</h3>
+<table>
+<tr><th>Function</th><th>Returns</th><th>SQL</th><th>Purpose</th></tr>
+<tr><td><code>get_user(username)</code></td><td><code>dict | None</code></td><td><code>SELECT * FROM users WHERE username = %s</code></td><td>Fetch user for login</td></tr>
+<tr><td><code>update_user_totp(username, secret)</code></td><td><code>None</code></td><td><code>UPDATE users SET totp_secret = %s</code></td><td>Store verified TOTP secret</td></tr>
+<tr><td><code>seed_admin_user(password)</code></td><td><code>None</code></td><td><code>INSERT + INSERT IGNORE</code></td><td>Create admin user + seed LLM config</td></tr>
+</table>
+
+<h3>Session Helpers</h3>
+<table>
+<tr><th>Function</th><th>Returns</th><th>SQL</th><th>Purpose</th></tr>
+<tr><td><code>create_session(token, username, is_temp, ttl)</code></td><td><code>None</code></td><td><code>INSERT INTO sessions</code></td><td>Create temp or full session</td></tr>
+<tr><td><code>get_session(token, temp_only)</code></td><td><code>dict | None</code></td><td><code>SELECT ... WHERE expires_at &gt; NOW()</code></td><td>Validate session token</td></tr>
+<tr><td><code>delete_session(token)</code></td><td><code>None</code></td><td><code>DELETE FROM sessions</code></td><td>Remove session (e.g., after TOTP verify)</td></tr>
+<tr><td><code>cleanup_expired_sessions()</code></td><td><code>int</code></td><td><code>DELETE ... WHERE expires_at &lt; NOW()</code></td><td>Background cleanup (every 60s)</td></tr>
+</table>
+
+<h3>Connection Pattern</h3>
+<pre># Every database operation follows this pattern:
+conn = get_db()            # Get pooled connection
+try:
+    cursor = get_cursor(conn)  # Dictionary cursor
+    cursor.execute(sql, params)
+    rows = cursor.fetchall()   # Returns list of dicts
+    conn.commit()              # For INSERT/UPDATE only
+finally:
+    conn.close()               # Return connection to pool</pre>
+
+<h3>Who Imports What</h3>
+<table>
+<tr><th>File</th><th>Imports from database.py</th><th>Operations</th></tr>
+<tr><td><code>webhook_receiver.py</code></td><td><code>get_db, get_cursor, wait_for_db, init_db</code></td><td>INSERT, SELECT COUNT (k8s_events)</td></tr>
+<tr><td><code>mcp_server.py</code></td><td><code>get_db, get_cursor</code></td><td>SELECT, UPDATE (k8s_events) + kubectl (10 tools total, 3 kubectl-only)</td></tr>
+<tr><td><code>events_api.py</code></td><td><code>get_db, get_cursor</code></td><td>SELECT (k8s_events)</td></tr>
+<tr><td><code>auth.py</code></td><td><code>create_session, get_session, delete_session, get_user, update_user_totp</code></td><td>SELECT, INSERT, UPDATE, DELETE (users, sessions)</td></tr>
+<tr><td><code>config.py</code></td><td><code>ConfigStore</code></td><td>SELECT (app_config) with cache</td></tr>
+<tr><td><code>main.py</code></td><td><code>wait_for_db, init_db, seed_admin_user, cleanup_expired_sessions</code></td><td>Startup init + background cleanup</td></tr>
+</table>
+</div>
+
+
+<!-- ═══════════════════ 12. SQL QUERY REFERENCE ═══════════════════ -->
+<div class="section" id="queries">
+<h2>12. SQL Query Reference</h2>
+<p>Every SQL query executed against the database, organized by table and operation type.</p>
+
+<h3>INSERT Queries</h3>
+<table>
+<tr><th>Source</th><th>Function</th><th>SQL</th></tr>
+<tr>
+    <td><code>webhook_receiver.py</code></td>
+    <td><code>store_event()</code></td>
+    <td><pre>INSERT IGNORE INTO k8s_events
+  (event_id, event_type, kind, name, namespace,
+   reason, message, severity, raw_payload, status,
+   created_at, updated_at)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'new', %s, %s)</pre></td>
+</tr>
+</table>
+
+<h3>SELECT Queries</h3>
+<table>
+<tr><th>Source</th><th>Function</th><th>SQL</th></tr>
+<tr>
+    <td><code>webhook_receiver.py</code></td>
+    <td><code>health()</code></td>
+    <td><code>SELECT COUNT(*) AS cnt FROM k8s_events</code></td>
+</tr>
+<tr>
+    <td><code>events_api.py</code></td>
+    <td><code>list_events()</code></td>
+    <td><code>SELECT id, event_id, ... FROM k8s_events WHERE 1=1 [+ filters] ORDER BY created_at DESC LIMIT %s OFFSET %s</code></td>
+</tr>
+<tr>
+    <td><code>events_api.py</code></td>
+    <td><code>list_events()</code></td>
+    <td><code>SELECT COUNT(*) AS cnt FROM k8s_events WHERE 1=1 [+ filters]</code></td>
+</tr>
+<tr>
+    <td><code>events_api.py</code></td>
+    <td><code>event_stats()</code></td>
+    <td><code>SELECT severity, COUNT(*) as count FROM k8s_events GROUP BY severity</code><br><code>SELECT status, COUNT(*) as count FROM k8s_events GROUP BY status</code><br><code>SELECT COUNT(*) AS cnt FROM k8s_events</code></td>
+</tr>
+<tr>
+    <td><code>events_api.py</code></td>
+    <td><code>event_stream()</code></td>
+    <td><code>SELECT MAX(id) AS max_id FROM k8s_events</code><br><code>SELECT ... FROM k8s_events WHERE id &gt; %s ORDER BY id ASC</code></td>
+</tr>
+<tr>
+    <td><code>events_api.py</code></td>
+    <td><code>get_event()</code></td>
+    <td><code>SELECT * FROM k8s_events WHERE event_id = %s</code></td>
+</tr>
+<tr>
+    <td><code>mcp_server.py</code></td>
+    <td><code>list_events()</code></td>
+    <td><code>SELECT id, event_id, ... FROM k8s_events WHERE 1=1 [+ filters] ORDER BY created_at DESC LIMIT %s</code></td>
+</tr>
+<tr>
+    <td><code>mcp_server.py</code></td>
+    <td><code>get_event()</code></td>
+    <td><code>SELECT * FROM k8s_events WHERE event_id = %s</code></td>
+</tr>
+<tr>
+    <td><code>mcp_server.py</code></td>
+    <td><code>analyze_event()</code></td>
+    <td><code>SELECT * FROM k8s_events WHERE event_id = %s</code></td>
+</tr>
+<tr>
+    <td><code>mcp_server.py</code></td>
+    <td><code>get_event_summary()</code></td>
+    <td><code>SELECT severity, COUNT(*) as cnt FROM k8s_events GROUP BY severity</code><br><code>SELECT status, COUNT(*) as cnt FROM k8s_events GROUP BY status</code><br><code>SELECT event_id, ... FROM k8s_events ORDER BY created_at DESC LIMIT 5</code></td>
+</tr>
+</table>
+
+<h3>UPDATE Queries (k8s_events)</h3>
+<table>
+<tr><th>Source</th><th>Function</th><th>SQL</th></tr>
+<tr>
+    <td><code>mcp_server.py</code></td>
+    <td><code>analyze_event()</code></td>
+    <td><pre>UPDATE k8s_events
+SET status = 'analyzed', analysis = %s, updated_at = %s
+WHERE event_id = %s</pre></td>
+</tr>
+<tr>
+    <td><code>mcp_server.py</code></td>
+    <td><code>mark_resolved()</code></td>
+    <td><pre>UPDATE k8s_events
+SET status = 'resolved',
+    analysis = CONCAT(COALESCE(analysis, ''), %s),
+    updated_at = %s
+WHERE event_id = %s</pre></td>
+</tr>
+</table>
+
+<h3>Authentication Queries (users + sessions)</h3>
+<table>
+<tr><th>Source</th><th>Function</th><th>SQL</th><th>When</th></tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>get_user()</code></td>
+    <td><code>SELECT * FROM users WHERE username = %s</code></td>
+    <td>Login (password check)</td>
+</tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>update_user_totp()</code></td>
+    <td><code>UPDATE users SET totp_secret = %s WHERE username = %s</code></td>
+    <td>First-time TOTP setup</td>
+</tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>seed_admin_user()</code></td>
+    <td><code>SELECT COUNT(*) AS cnt FROM users WHERE username = 'admin'</code><br><code>INSERT INTO users (username, password_hash) VALUES (%s, %s)</code></td>
+    <td>First startup only</td>
+</tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>create_session()</code></td>
+    <td><code>INSERT INTO sessions (token, username, is_temp, expires_at) VALUES (%s, %s, %s, %s)</code></td>
+    <td>After login / after TOTP verify</td>
+</tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>get_session()</code></td>
+    <td><code>SELECT * FROM sessions WHERE token = %s AND expires_at &gt; NOW() AND is_temp = {TRUE|FALSE}</code></td>
+    <td>Every authenticated request</td>
+</tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>delete_session()</code></td>
+    <td><code>DELETE FROM sessions WHERE token = %s</code></td>
+    <td>After TOTP verification</td>
+</tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>cleanup_expired_sessions()</code></td>
+    <td><code>DELETE FROM sessions WHERE expires_at &lt; NOW()</code></td>
+    <td>Background task (every 60s)</td>
+</tr>
+</table>
+
+<h3>Config Queries (app_config)</h3>
+<table>
+<tr><th>Source</th><th>Function</th><th>SQL</th><th>When</th></tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>ConfigStore.get()</code></td>
+    <td><code>SELECT config_value FROM app_config WHERE config_key = %s</code></td>
+    <td>Cache miss (every 60s per key)</td>
+</tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>ConfigStore.set()</code></td>
+    <td><code>INSERT INTO app_config (config_key, config_value) VALUES (%s, %s) ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)</code></td>
+    <td>Config update (admin action)</td>
+</tr>
+<tr>
+    <td><code>database.py</code></td>
+    <td><code>seed_admin_user()</code></td>
+    <td><code>INSERT IGNORE INTO app_config (config_key, config_value) VALUES (%s, %s)</code></td>
+    <td>First startup (3 LLM keys)</td>
+</tr>
+</table>
+</div>
+
+
+<!-- ═══════════════════ 13. INIT SQL ═══════════════════ -->
+<div class="section" id="init-sql">
+<h2>13. Initialization Script &mdash; <code>init.sql</code></h2>
+<p>Mounted into the MySQL container at <code>/docker-entrypoint-initdb.d/init.sql</code>. Runs automatically on first container creation only. The <code>init_db()</code> function in <code>database.py</code> also creates these tables on every startup (idempotent).</p>
+
+<pre>-- MySQL initialization script for Sentinel K8s
+
+CREATE DATABASE IF NOT EXISTS sentinel_k8s;
+
+CREATE USER IF NOT EXISTS 'sentinel'@'%' IDENTIFIED BY 'sentinel_pass';
+GRANT ALL PRIVILEGES ON sentinel_k8s.* TO 'sentinel'@'%';
+FLUSH PRIVILEGES;
+
+USE sentinel_k8s;
+
+CREATE TABLE IF NOT EXISTS k8s_events (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    event_id    VARCHAR(64) NOT NULL UNIQUE,
+    event_type  VARCHAR(32) NOT NULL,
+    kind        VARCHAR(64),
+    name        VARCHAR(253),
+    namespace   VARCHAR(253),
+    reason      VARCHAR(128),
+    message     TEXT,
+    severity    VARCHAR(16) DEFAULT 'info',
+    raw_payload LONGTEXT NOT NULL,
+    status      VARCHAR(16) DEFAULT 'new',
+    analysis    TEXT,
+    created_at  VARCHAR(64) NOT NULL,
+    updated_at  VARCHAR(64) NOT NULL
+);
+
+CREATE INDEX idx_status ON k8s_events(status);
+CREATE INDEX idx_severity ON k8s_events(severity);
+CREATE INDEX idx_created ON k8s_events(created_at);
+
+-- Application configuration (LLM credentials, etc.)
+CREATE TABLE IF NOT EXISTS app_config (
+    config_key   VARCHAR(128) PRIMARY KEY,
+    config_value TEXT NOT NULL,
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- User accounts with bcrypt-hashed passwords and TOTP secrets
+CREATE TABLE IF NOT EXISTS users (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    username      VARCHAR(128) NOT NULL UNIQUE,
+    password_hash VARCHAR(256) NOT NULL,
+    totp_secret   VARCHAR(64),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Persistent sessions with TTL expiration
+CREATE TABLE IF NOT EXISTS sessions (
+    token      VARCHAR(128) PRIMARY KEY,
+    username   VARCHAR(128) NOT NULL,
+    is_temp    BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    INDEX idx_expires (expires_at)
+);</pre>
+</div>
+
+
+<!-- ═══════════════════ 14. ENV VARS ═══════════════════ -->
+<div class="section" id="env-vars">
+<h2>14. Environment Variables</h2>
+<p>Configured in <code>.env</code> file at project root. Only MySQL connection credentials and seed password remain in environment variables — all application secrets (LLM keys, auth credentials, TOTP, sessions) are stored in the database.</p>
+
+<table>
+<tr><th>Variable</th><th>Default</th><th>Used By</th><th>Purpose</th></tr>
+<tr><td><code>MYSQL_HOST</code></td><td><code>localhost</code></td><td>database.py</td><td>MySQL server hostname (set to <code>mysql</code> in Docker)</td></tr>
+<tr><td><code>MYSQL_PORT</code></td><td><code>3306</code></td><td>database.py</td><td>MySQL internal port</td></tr>
+<tr><td><code>MYSQL_USER</code></td><td><code>sentinel</code></td><td>database.py, docker-compose</td><td>Application database user</td></tr>
+<tr><td><code>MYSQL_PASSWORD</code></td><td><code>sentinel_pass</code></td><td>database.py, docker-compose</td><td>Application database password</td></tr>
+<tr><td><code>MYSQL_DATABASE</code></td><td><code>sentinel_k8s</code></td><td>database.py, docker-compose</td><td>Database name</td></tr>
+<tr><td><code>MYSQL_ROOT_PASSWORD</code></td><td><code>rootpass</code></td><td>docker-compose</td><td>MySQL root password</td></tr>
+<tr><td><code>SEED_ADMIN_PASSWORD</code></td><td><code>admin</code></td><td>main.py (backend)</td><td>Initial admin password (only used on first run)</td></tr>
+</table>
+
+<h3>Removed Environment Variables</h3>
+<p>These variables were previously in <code>.env</code> and <code>docker-compose.yml</code> but are now stored securely in MySQL:</p>
+<table>
+<tr><th>Removed Variable</th><th>Now Stored In</th><th>Table</th></tr>
+<tr><td><code>LITELLM_BASE_URL</code></td><td><code>app_config.litellm_base_url</code></td><td><code>app_config</code></td></tr>
+<tr><td><code>LITELLM_MODEL</code></td><td><code>app_config.litellm_model</code></td><td><code>app_config</code></td></tr>
+<tr><td><code>LITELLM_API_KEY</code></td><td><code>app_config.litellm_api_key</code></td><td><code>app_config</code></td></tr>
+<tr><td><code>AUTH_USERNAME</code></td><td><code>users.username</code></td><td><code>users</code></td></tr>
+<tr><td><code>AUTH_PASSWORD</code></td><td><code>users.password_hash</code> (bcrypt)</td><td><code>users</code></td></tr>
+</table>
+</div>
+
+
+<!-- ═══════════════════ 15. COMMANDS ═══════════════════ -->
+<div class="section" id="commands">
+<h2>15. Useful Commands</h2>
+
+<h3>Docker</h3>
+<pre># Start all services
+docker-compose up -d
+
+# Rebuild and restart
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f mysql
+docker-compose logs -f webhook
+docker-compose logs -f backend
+
+# Stop all
+docker-compose down
+
+# Reset database (delete volume)
+docker-compose down -v</pre>
+
+<h3>Event Queries</h3>
+<pre># Connect
+docker exec -it k8s_webhook-mysql-1 mysql -u sentinel -psentinel_pass sentinel_k8s
+
+# View recent events
+SELECT event_id, severity, namespace, name, reason, status, created_at
+FROM k8s_events ORDER BY created_at DESC LIMIT 10;
+
+# Count by severity
+SELECT severity, COUNT(*) AS count FROM k8s_events GROUP BY severity;
+
+# Count by status
+SELECT status, COUNT(*) AS count FROM k8s_events GROUP BY status;
+
+# Find critical events
+SELECT event_id, namespace, name, reason, message
+FROM k8s_events WHERE severity = 'critical' ORDER BY created_at DESC;
+
+# View analyzed events
+SELECT event_id, name, LEFT(analysis, 200) AS analysis_preview
+FROM k8s_events WHERE status = 'analyzed';
+
+# Check table size
+SELECT COUNT(*) AS total_events,
+       ROUND(SUM(LENGTH(raw_payload))/1024/1024, 2) AS payload_mb
+FROM k8s_events;</pre>
+
+<h3>User &amp; Auth Queries</h3>
+<pre># View users (password hash truncated for display)
+SELECT id, username, LEFT(password_hash, 30) AS hash_preview,
+       totp_secret IS NOT NULL AS has_2fa, created_at
+FROM users;
+
+# View active sessions
+SELECT LEFT(token, 20) AS token_preview, username, is_temp,
+       created_at, expires_at,
+       TIMESTAMPDIFF(MINUTE, NOW(), expires_at) AS minutes_remaining
+FROM sessions WHERE expires_at > NOW();
+
+# Count sessions by type
+SELECT IF(is_temp, 'temp', 'full') AS type, COUNT(*) AS count
+FROM sessions WHERE expires_at > NOW() GROUP BY is_temp;
+
+# Manually expire all sessions (force re-login)
+UPDATE sessions SET expires_at = NOW();
+
+# Reset admin password (generate bcrypt hash externally first)
+# python3 -c "import bcrypt; print(bcrypt.hashpw(b'newpass', bcrypt.gensalt()).decode())"
+UPDATE users SET password_hash = '$2b$12$...' WHERE username = 'admin';
+
+# Reset TOTP (forces QR code re-setup on next login)
+UPDATE users SET totp_secret = NULL WHERE username = 'admin';</pre>
+
+<h3>Config Queries</h3>
+<pre># View all config
+SELECT * FROM app_config;
+
+# Update LLM model at runtime (takes effect within 60s)
+UPDATE app_config SET config_value = 'gpt-4-turbo'
+WHERE config_key = 'litellm_model';
+
+# Update API key
+UPDATE app_config SET config_value = 'sk-live-xxx'
+WHERE config_key = 'litellm_api_key';
+
+# Update LiteLLM base URL
+UPDATE app_config SET config_value = 'https://my-proxy.example.com/v1'
+WHERE config_key = 'litellm_base_url';</pre>
+
+<h3>Testing</h3>
+<pre># Send a test event
+curl -X POST http://localhost:8000/webhook/event \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"Warning","involvedObject":{"kind":"Pod","name":"test-pod","namespace":"default"},"reason":"CrashLoopBackOff","message":"Back-off restarting failed container"}'
+
+# Check webhook health
+curl http://localhost:8000/health
+
+# Login to get auth token
+curl -X POST http://localhost:5173/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"admin"}'
+
+# List events (requires auth token)
+curl http://localhost:8001/api/events \
+  -H 'Authorization: Bearer YOUR_TOKEN'</pre>
+</div>
+
+
+</div><!-- /container -->
+</div><!-- /page -->
+
+<script>
+function scrollToSection(id){
+    document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

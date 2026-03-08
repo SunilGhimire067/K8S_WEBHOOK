@@ -1,0 +1,79 @@
+health_check:
+  label: Cluster Health Check
+  description: Run a full cluster health assessment
+  prompt: |
+    Perform a comprehensive cluster health check:
+    1. Get the event summary dashboard
+    2. Check node status with 'kubectl get nodes'
+    3. List any critical or warning events
+    4. Summarize the overall cluster health with a clear status (Healthy / Degraded / Critical) and list any issues found.
+
+pod_status:
+  label: Pod Status Overview
+  description: Check all pods across namespaces
+  prompt: |
+    Check pod status across the cluster:
+    1. Run 'kubectl get pods --all-namespaces' to see all pods
+    2. Identify any pods that are not Running/Completed
+    3. For any unhealthy pods, briefly explain what might be wrong
+    4. Present a summary table of namespace, pod counts, and any issues.
+
+recent_incidents:
+  label: Recent Incidents
+  description: Find and analyze recent critical events
+  prompt: |
+    Find and analyze recent incidents:
+    1. List recent events filtered by severity=critical and severity=warning
+    2. For the top 3 most important events, analyze each one
+    3. Provide a prioritized incident list with recommended actions.
+
+resource_usage:
+  label: Resource Usage
+  description: Check cluster resource utilization
+  prompt: |
+    Check cluster resource utilization:
+    1. Run 'kubectl top nodes' to see node resource usage
+    2. Run 'kubectl top pods --all-namespaces --sort-by=memory' for top memory consumers
+    3. Identify any nodes or pods approaching resource limits
+    4. Summarize with a table showing utilization percentages.
+
+namespace_audit:
+  label: Namespace Audit
+  description: Audit resources in a specific namespace
+  prompt: |
+    Audit the default namespace (or ask me which namespace):
+    1. Run 'kubectl get all -n default' to see all resources
+    2. Check for any events in that namespace
+    3. Identify any misconfigurations or issues
+    4. Provide a clean summary of what's deployed and its health.
+
+resource_trace:
+  label: Resource Trace
+  description: Trace high resource usage on pods
+  prompt: |
+    Help me trace high resource usage:
+    1. Run 'kubectl top pods --all-namespaces --sort-by=cpu' to find the top CPU consumers
+    2. Run 'kubectl top pods --all-namespaces --sort-by=memory' to find the top memory consumers
+    3. For the top 3 highest consumers, use the trace_resource_usage tool to analyze why they are using high resources
+    4. Present a summary with root cause analysis and recommended actions for each.
+
+jvm_analysis:
+  label: JVM Analysis
+  description: Analyze JVM configuration for Java pods
+  prompt: |
+    Analyze JVM configuration across the cluster:
+    1. Use the get_jvm_details tool to check the default namespace
+    2. Compare expected JVM settings (from env vars) with actual runtime settings
+    3. Highlight any mismatches that could cause issues (e.g. Xmx not matching, wrong GC)
+    4. Provide recommendations for any misconfigured JVM settings.
+
+network_check:
+  label: Network Check
+  description: Check service connectivity and latency
+  prompt: |
+    Check the cluster network health:
+    1. Use the get_network_status tool to get an overview of all services and endpoints
+    2. Identify services without endpoints (potential issues)
+    3. Check for any NetworkNotReady events
+    4. Identify any network policies that might be blocking traffic
+    5. Summarize the network health with any issues found.

@@ -1,0 +1,67 @@
+services:
+  mysql:
+    image: mysql:8
+    ports:
+      - "3008:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sentinel_k8s}
+      MYSQL_USER: ${MYSQL_USER:-sentinel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-sentinel_pass}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  webhook:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.webhook
+    ports:
+      - "8000:8000"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-sentinel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-sentinel_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sentinel_k8s}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    ports:
+      - "8001:8001"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-sentinel}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-sentinel_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sentinel_k8s}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin}
+      EVENT_POLL_ENABLED: ${EVENT_POLL_ENABLED:-true}
+      EVENT_POLL_INTERVAL: ${EVENT_POLL_INTERVAL:-30}
+    volumes:
+      - ${HOME}/.kube/config:/root/.kube/config:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

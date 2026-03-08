@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "ai-devops": {
+      "command": "/Users/sunilprasadghimire/Library/Mobile Documents/com~apple~CloudDocs/ai-devops-sdlc-platform/ai-agent/venv/bin/python3",
+      "args": [
+        "/Users/sunilprasadghimire/Library/Mobile Documents/com~apple~CloudDocs/ai-devops-sdlc-platform/ai-agent/run_mcp_server.py"
+      ]
+    },
+    "k8s-event-analyzer": {
+      "command": "python3",
+      "args": [
+        "/Users/sunilprasadghimire/Library/Mobile Documents/com~apple~CloudDocs/k8s_webhook/webhook/mcp_server.py"
+      ],
+      "env": {
+        "KUBECONFIG": "/Users/sunilprasadghimire/.kube/config",
+        "MYSQL_HOST": "localhost",
+        "MYSQL_PORT": "3008"
+      }
+    }
+  },
+  "preferences": {
+    "sidebarMode": "chat",
+    "coworkScheduledTasksEnabled": false
+  }
+}
